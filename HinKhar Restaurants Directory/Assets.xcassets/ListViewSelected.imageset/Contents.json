@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "ic_listview_selected.svg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

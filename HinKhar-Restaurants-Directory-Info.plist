@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSAllowsArbitraryLoads</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict/>
+	<key>UIAppFonts</key>
+	<array>
+		<string>futura-extra-bold.ttf</string>
+		<string>futura-bold.ttf</string>
+		<string>futura-book.ttf</string>
+		<string>futura-demi.ttf</string>
+		<string>futura-heavy.ttf</string>
+		<string>futura-light.ttf</string>
+		<string>futura-medium.ttf</string>
+	</array>
+</dict>
+</plist>

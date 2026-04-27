@@ -1,0 +1,143 @@
+//
+//  Localizable.strings
+//  HinKhar Restaurants Directory
+//
+//  Created by Htet Aung Kyaw on 18/03/2026.
+//
+
+
+"login.title" = "အကောင့်ဝင်ရောက်ပါ";
+"login.placeholder.phoneOrEmail" = "ဖုန်းနံပါတ် သို့မဟုတ် အီးမေးလ်";
+"login.placeholder.password" = "လျှို့ဝှက်နံပါတ်";
+"login.button.login" = "ဝင်မည်";
+"login.forgotPassword" = "စကားဝှက်မေ့နေလား";
+"login.registerPrompt" = "အကောင့်မရှိသေးဘူးလား";
+"login.register" = "စာရင်းသွင်းမည်";
+"login.continueAsGuest" = "ဧည့်သည်အဖြစ် ဆက်လက်အသုံးပြုမည်";
+"login.loading" = "ဖွင့်နေသည်…";
+"login.success" = "လော့ဂ်အင် အောင်မြင်ပါသည်";
+"app.version" = "ဗားရှင်း : %@";
+"language.en" = "EN";
+"language.mm" = "MM";
+
+"choose.register.phone" = "ဖုန်းနံပါတ်ဖြင့်သုံးမည်";
+"choose.or" = "သို့မဟုတ်";
+"choose.register.email" = "အီးမေးလ်ဖြင့်သုံးမည်";
+
+"register.title" = "စာရင်းသွင်းမည်";
+"register.to.be" = "ကျွန်ုပ်တို့ထဲက တစ်ယောက်ဖြစ်ဖို့အတွက်";
+"register.placeholder.phone" = "သင့်ဖုန်းနံပါတ်ကို ရိုက်ထည့်ပါ";
+"register.placeholder.email" = "သင့်အီးမေးလ်ကို ရိုက်ထည့်ပါ";
+"register.button.continue" = "ဆက်သွားမည်";
+"register.placeholder.name" = "သင့်ရဲ့နာမည်ကိုရိုက်ထည့်ပါ";
+"register.placeholder.password" = "သင့်ရဲ့စကားဝှက်ကိုရိုက်ထည့်ပါ";
+"register.placeholder.confirmPassword" = "စကားဝှက်ကိုအတည်ပြုပါ";
+"register.agree.to" = "ကို သဘောတူပါသည်။";
+"register.and" = "နှင့်";
+
+"otp.verify.phone" = "သင့်ရဲ့ဖုန်းနံပါတ်ကိုအတည်ပြုပါ";
+"otp.verify.email" = "သင့်အီးမေးလ်လိပ်စာကို အတည်ပြုပါ";
+"otp.6digits.code" = "ဂဏန်း ၆ လုံးပါ ကုဒ်ကို ပေးပို့ပြီးပါပြီ";
+"otp.code" = "OTPကုဒ်";
+"otp.button.verify" = "အတည်ပြုမည်";
+
+"forgot.message" = "သင့်စကားဝှက်ကိုပြန်လည်သတ်မှတ်ရန် အကောင့်ဖွင့်တုန်းက သုံးခဲ့တဲ့ ဖုန်းနံပါတ် သို့မဟုတ် အီးမေးလ် ကို ရိုက်ထည့်ပါ";
+"forgot.placeholder" = "ဖုန်းနံပါတ် သို့မဟုတ် အီးမေးလ် ကို ရိုက်ထည့်ပါ";
+"forgot.button.confirm" = "သေချာပါသည်";
+"forgot.alert.title" = "ဖုန်းနံပါတ် သို့မဟုတ် အီးမေးလ် ကို ရိုက်ထည့်ပါ";
+"forgot.alert.message" = "လုပ်ဆောင်ရန်အတွက် ဖုန်းနံပါတ် သို့မဟုတ် အီးမေးလ် ကို ရိုက်ထည့်ပါ";
+
+"reset.title" = "စကားဝှက်ကိုပြန်လည်သတ်မှတ်မည်";
+"reset.placeholder.newPassword" = "စကားဝှက်အသစ်ကိုရိုက်ထည့်ပါ";
+"reset.placeholder.confirmNewPassword" = "စကားဝှက်အသစ်ကိုထပ်ရိုက်ပါ";
+"reset.button.backToLogin" = "အကောင့်ဝင်ရန် ပြန်သွားပါ";
+
+"tab.home" = "မူလစာမျက်နှာ";
+"tab.promotions" = "ပရိုမိုးရှင်းများ";
+"tab.restaurants" = "ဆိုင်အားလုံး";
+"tab.profile" = "ပရိုဖိုင်";
+
+"home.title" = "အထူးဆိုင်များ";
+"home.nearByMe" = "အနီးနားကဆိုင်များ";
+
+"promotions.title" = "ပရိုမိုးရှင်းများ နှင့် လျှော့စျေးများ";
+
+"restaurants.title" = "ဆိုင်အားလုံး";
+
+"detail.promotion.info" = "ပရိုမိုးရှင်းအချက်အလက်";
+"detail.contact" = "ဆက်သွယ်ရန်နံပါတ်များ";
+"detail.about" = "ဆိုင်အကြောင်း";
+"detail.openingHours" = "ဆိုင်ဖွင့်ချိန်များ";
+"detail.address" = "လိပ်စာ";
+"detail.button.menu" = "မီနူးများကိုကြည့်မည်";
+
+"profile.welcome" = "ကြိုဆိုပါတယ် !";
+"profile.button.update" = "အချက်အလက်များကိုမြှင့်တင်မည်";
+"profile.button.favorite" = "အကြိုက်ဆုံးဆိုင်များ";
+
+"update.profile.name" = "အမည်";
+"update.profile.gender" = "ကျား / မ";
+"update.profile.dob" = "မွေးနေ့";
+"update.profile.region" = "တိုင်းဒေသကြီး / ပြည်နယ်";
+"update.profile.district" = "ခရိုင်";
+"update.profile.township" = "မြို့နယ်";
+"update.profile.address" = "လိပ်စာ";
+"update.profile.button" = "ပြောင်းလဲမည်";
+"update.placeholder.select" = "ကျေးဇူးပြုပြီးရွေးပါ";
+"gender.title" = "ကျား / မ ရွေးပါ";
+"region.title" = "တိုင်းဒေသကြီး / ပြည်နယ် ရွေးပါ";
+"district.title" = "ခရိုင် ရွေးပါ";
+"township.title" = "မြို့နယ် ရွေးပါ";
+"alert.regionRequired" = "တိုင်းဒေသကြီး / ပြည်နယ်ကို အရင်ရွေးပါ";
+"alert.districtRequired" = "ခရိုင်ကို အရင်ရွေးပါ";
+"alert.selectDate" = "ရက်ကိုရွေးပါ";
+"alert.cancel" = "မလုပ်ပါ";
+"alert.done" = "လုပ်မယ်";
+
+"search" = "ရှာပါ";
+"change" = "ပြောင်းမည်";
+"set" = "သတ်မှတ်မည်";
+"not.set" = "မသတ်မှတ်ရသေးပါ";
+
+"filter.clearAll" = "အားလုံးရှင်းမည်";
+"filter.byTownship" = "မြို့နယ်အလိုက်ရှာမည်";
+"filter.byCuisineType" = "ဟင်းလျာအမျိုးအစားအလိုက်ရှာမည်";
+"filter.byPriceRange" = "ဈေးနှုန်းအပိုင်းအခြားအလိုက်ရှာမည်";
+
+"setting.title" = "ဆက်တင်များ";
+"setting.setPhone" = "ဖုန်းနံပါတ်ကို သတ်မှတ်မည်";
+"setting.changePhone" = "ဖုန်းနံပါတ်ပြောင်းမည်";
+"setting.setEmail" = "အီးမေးလ်ကို သတ်မှတ်မည်";
+"setting.changeEmail" = "အီးမေးလ်လိပ်စာပြောင်းမည်";
+"setting.changePassword" = "စကားဝှက်ပြောင်းမည်";
+"setting.suggestion" = "အကြံပြုချက်";
+"setting.privacy.policy" = "ကိုယ်ရေးအချက်အလက်မူဝါဒ";
+"setting.terms.of.service" = "ဝန်ဆောင်မှုစည်းမျဉ်းများ";
+"setting.contactUs" = "ဆက်သွယ်ရန်";
+"setting.about" = "Appအကြောင်း";
+"setting.rate" = "Appကို အဆင့်သတ်မှတ်မည်";
+"setting.delete" = "အကောင့်ကိုဖျက်သိမ်းမည်";
+"setting.logout" = "ထွက်မည်";
+
+"change.placeholder.currentPassword" = "စကားဝှက်အဟောင်းကိုရိုက်ထည့်ပါ";
+"change.new.password.length" = "စကားဝှက်သည် အနည်းဆုံး စာလုံး၈လုံး ရှိရမည်";
+"change.confirm.password.length" = "စကားဝှက်သည် အနည်းဆုံး စာလုံး၈လုံး ရှိရမည်";
+"change.passwords.not.match" = "အသစ်ပြောင်းလဲမည့် စကားဝှက်များ တူညီဖို့ လိုအပ်ပါသည်";
+
+"suggestion.placeholder" = "ရေးချင်တာရေးခဲ့ပါ..";
+"suggestion.button.submit" = "ပို့မယ်";
+
+"contact.customersCare" = "Customers Care";
+
+"delete.title1" = "သင့်အကောင့်ကိုဖျက်မှာသေချာပြီလား";
+"delete.title2" = "သတိပေးချက် : သင့်ရဲ့အကောင့်ကိုဖျက်လိုက်ပြီးတဲ့နောက်မှာ";
+"delete.detail1" = "သင်ဟာ HinKhar App ကို ဝင်ရောက်ပြီး အသုံးပြုလို့ ရနိုင်တော့မှာ မဟုတ်ပါဘူး";
+"delete.detail2" = "ကျွန်ုပ်တို့စနစ်ကနေ သင့်ရဲ့အချက်အလက်တွေကို ဖျက်ပစ်လိုက်မှာ ဖြစ်ပါတယ်";
+"delete.button" = "ဖျက်မယ်";
+
+"menu.name.placeholder" = "မီနူးအမည်";
+"menu.signature" = "Signature Menu";
+"menu.notAvailable" = "လက်ရှိမရနိင်ပါ";
+
+"search.title" = "ဘာပဲလိုလိုရှာလိုက်ပါ";
+"search.placeholder" = "ဆိုင်အမည် (သို့) မီနူးအမည်";

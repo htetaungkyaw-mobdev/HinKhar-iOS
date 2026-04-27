@@ -1,0 +1,141 @@
+//
+//  Localizable.strings
+//  HinKhar Restaurants Directory
+//
+//  Created by Htet Aung Kyaw on 18/03/2026.
+//
+"login.title" = "LOGIN";
+"login.placeholder.phoneOrEmail" = "Phone or Email";
+"login.placeholder.password" = "Password";
+"login.button.login" = "Log In";
+"login.forgotPassword" = "Forgot Password?";
+"login.registerPrompt" = "Doesn’t have account?";
+"login.register" = "Register";
+"login.continueAsGuest" = "Continue as Guest";
+"login.loading" = "Loading…";
+"login.success" = "Login Success";
+"app.version" = "Version : %@";
+"language.en" = "EN";
+"language.mm" = "MM";
+
+"choose.register.phone" = "Register with Phone Number";
+"choose.or" = "Or";
+"choose.register.email" = "Register with Email";
+
+"register.title" = "REGISTER";
+"register.to.be" = "to be one of us";
+"register.placeholder.phone" = "Enter your phone number";
+"register.placeholder.email" = "Enter your email address";
+"register.button.continue" = "Continue";
+"register.placeholder.name" = "Enter your name";
+"register.placeholder.password" = "Enter your password";
+"register.placeholder.confirmPassword" = "Confirm your password";
+"register.agree.to" = "Agree to";
+"register.and" = "and";
+
+"otp.verify.phone" = "Verify your mobile number";
+"otp.verify.email" = "Verify your email address";
+"otp.6digits.code" = "6-digits code has been sent to";
+"otp.code" = "OTP Code";
+"otp.button.verify" = "Verify";
+
+"forgot.message" = "Enter your mobile number or email to reset your password";
+"forgot.placeholder" = "Enter your phone or email";
+"forgot.button.confirm" = "Confirm";
+"forgot.alert.title" = "Enter phone number or email";
+"forgot.alert.message" = "Please enter your phone number or email to continue.";
+
+"reset.title" = "Reset Password";
+"reset.placeholder.newPassword" = "Enter new password";
+"reset.placeholder.confirmNewPassword" = "Confirm new password";
+"reset.button.backToLogin" = "Back to Login";
+
+"tab.home" = "Home";
+"tab.promotions" = "Promotions";
+"tab.restaurants" = "Restaurants";
+"tab.profile" = "Profile";
+
+"home.title" = "Featured Restaurants";
+"home.nearByMe" = "Near by me";
+
+"promotions.title" = "Promotions & Deals";
+
+"restaurants.title" = "All Restaurants";
+
+"detail.promotion.info" = "Promotion's Information";
+"detail.contact" = "Contact";
+"detail.about" = "About";
+"detail.openingHours" = "Opening Hours";
+"detail.address" = "Address";
+"detail.button.menu" = "See Our Menu";
+
+"profile.welcome" = "Welcome !";
+"profile.button.update" = "Update Information";
+"profile.button.favorite" = "Favorite Restaurants";
+
+"update.profile.name" = "Name";
+"update.profile.gender" = "Gender";
+"update.profile.dob" = "Date of Birth";
+"update.profile.region" = "Region";
+"update.profile.district" = "District";
+"update.profile.township" = "Township";
+"update.profile.address" = "Address";
+"update.profile.button" = "Update";
+"update.placeholder.select" = "Please Select";
+"gender.title" = "Select Gender";
+"region.title" = "Select Region";
+"district.title" = "Select District";
+"township.title" = "Select Township";
+"alert.regionRequired" = "Please select region first!";
+"alert.districtRequired" = "Please select district first!";
+"alert.selectDate" = "Select Date";
+"alert.cancel" = "Cancel";
+"alert.done" = "Done";
+
+"search" = "Search";
+"set" = "Set";
+"change" = "Change";
+"not.set" = "Not Set";
+
+"filter.clearAll" = "Clear All";
+"filter.byTownship" = "Filter by Township";
+"filter.byCuisineType" = "Filter by Cuisine Type";
+"filter.byPriceRange" = "Filter by Price Range";
+
+"setting.title" = "Setting";
+"setting.setPhone" = "Set Phone Number";
+"setting.changePhone" = "Change Phone Number";
+"setting.setEmail" = "Set Email Address";
+"setting.changeEmail" = "Change Email Address";
+"setting.changePassword" = "Change Password";
+"setting.suggestion" = "Suggestion to Our App";
+"setting.privacy.policy" = "Privacy Policy";
+"setting.terms.of.service" = "Terms of Service";
+"setting.contactUs" = "Contact Us";
+"setting.about" = "About App";
+"setting.rate" = "Rate Our App";
+"setting.delete" = "Delete Account";
+"setting.logout" = "Log Out";
+
+"change.placeholder.currentPassword" = "Enter old password";
+"change.new.password.length" = "New password must be at least 8 characters.";
+"change.confirm.password.length" = "Confirm password must be at least 8 characters.";
+"change.passwords.not.match" = "Passwords do not match.";
+
+"suggestion.placeholder" = "Leave your thought here...";
+"suggestion.button.submit" = "Submit";
+
+"contact.customersCare" = "Customers Care";
+
+"delete.title1" = "Are you sure you want to delete your account?";
+"delete.title2" = "Warning : Once you delete your account";
+"delete.detail1" = "You will no longer be able to login and access the HinKhar App.";
+"delete.detail2" = "All your photos and data saved in the app will be deleted from the system.";
+"delete.button" = "Delete";
+
+"menu.name.placeholder" = "Menu Name";
+"menu.signature" = "Signature Menu";
+"menu.notAvailable" = "Not available right now";
+
+"search.title" = "Search Anything you want!";
+"search.placeholder" = "Restaurant Name or Menu Name";

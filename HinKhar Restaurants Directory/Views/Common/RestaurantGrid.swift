@@ -143,7 +143,7 @@ struct RestaurantGrid: View {
                     Spacer()
                     
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .frame(maxWidth: 160, maxHeight: .infinity, alignment: .topLeading)
                 .background(.black.opacity(0.4))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }

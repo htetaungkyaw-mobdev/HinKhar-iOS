@@ -16,6 +16,11 @@
 "login.continueAsGuest" = "ဧည့်သည်အဖြစ် ဆက်လက်အသုံးပြုမည်";
 "login.loading" = "ဖွင့်နေသည်…";
 "login.success" = "လော့ဂ်အင် အောင်မြင်ပါသည်";
+"login.error.credentialsIncorrect" = "အချက်အလက်များမှားယွင်းနေပါသည်";
+"login.error.accountDeactivated" = "အကောင့်ကို ပိတ်လိုက်ပါပြီ။ အက်ဒမင်ကို ဆက်သွယ်ပါ";
+"login.error.phoneOrEmailRequired" = "သင့်ဖုန်းနံပါတ် (သို့) အီးမေးလ်ကို ရိုက်ထည့်ပါ";
+"login.error.passwordRequired" = "သင့်စကားဝှက်ကိုရိုက်ထည့်ပါ";
+
 "app.version" = "ဗားရှင်း : %@";
 "language.en" = "EN";
 "language.mm" = "MM";
@@ -34,12 +39,25 @@
 "register.placeholder.confirmPassword" = "စကားဝှက်ကိုအတည်ပြုပါ";
 "register.agree.to" = "ကို သဘောတူပါသည်။";
 "register.and" = "နှင့်";
+"register.success" = "စာရင်းသွင်းခြင်းအောင်မြင်ပါသည်";
+"register.alert.email" = "သင့်အီးမေးလ်လိပ်စာကို ရိုက်ထည့်ပါ";
+"register.alert.email.format" = "မှန်ကန်သောအီးမေးလ်လိပ်စာတစ်ခုဖြည့်ပါ";
+"register.alert.phone" = "သင့်ဖုန်းနံပါတ်ကို ရိုက်ထည့်ပါ";
+"register.alert.email.title" = "အီးမေးလ်လိပ်စာကို ရိုက်ထည့်ပါ";
+"register.alert.phone.title" = "ဖုန်းနံပါတ်ကို ရိုက်ထည့်ပါ";
+"register.agree.title" = "သဘောတူရန် အကွက်ကို နှိပ်ပါ!";
+"register.agree.message" = "ကိုယ်ရေးအချက်အလက်မူဝါဒနှင့် ဝန်ဆောင်မှုစည်းမျဉ်းများကို သဘောတူပါသည် ကို နှိပ်ပါ";
+"register.error.duplicatePhone" = "ဖုန်းနံပါတ်ကို အသုံးပြုပြီးဖြစ်ပါသည်";
+"register.error.password.min8" = "စကားဝှက် အနည်းဆုံး စာလုံး ၈ လုံး ရှိရမည်";
+"register.error.password.notMatch" = "စကားဝှက်အတည်ပြုချက် မကိုက်ညီပါ";
 
 "otp.verify.phone" = "သင့်ရဲ့ဖုန်းနံပါတ်ကိုအတည်ပြုပါ";
 "otp.verify.email" = "သင့်အီးမေးလ်လိပ်စာကို အတည်ပြုပါ";
 "otp.6digits.code" = "ဂဏန်း ၆ လုံးပါ ကုဒ်ကို ပေးပို့ပြီးပါပြီ";
 "otp.code" = "OTPကုဒ်";
 "otp.button.verify" = "အတည်ပြုမည်";
+"otp.expired.time" = "OTP Code သက်တမ်းကုန်မည့်အချိန် ";
+"otp.button.resend" = "OTP Code ကို ထပ်ယူမည်";
 
 "forgot.message" = "သင့်စကားဝှက်ကိုပြန်လည်သတ်မှတ်ရန် အကောင့်ဖွင့်တုန်းက သုံးခဲ့တဲ့ ဖုန်းနံပါတ် သို့မဟုတ် အီးမေးလ် ကို ရိုက်ထည့်ပါ";
 "forgot.placeholder" = "ဖုန်းနံပါတ် သို့မဟုတ် အီးမေးလ် ကို ရိုက်ထည့်ပါ";
@@ -140,4 +158,11 @@
 "menu.notAvailable" = "လက်ရှိမရနိင်ပါ";
 
 "search.title" = "ဘာပဲလိုလိုရှာလိုက်ပါ";
-"search.placeholder" = "ဆိုင်အမည် (သို့) မီနူးအမည်";
+"search.placeholder1" = "ဘာစားချင်ပါသလဲ";
+"search.placeholder2" = "ဘယ်ဆိုင်ကိုရှာချင်ပါသလဲ";
+
+"no.restaurant" = "ဆိုင်များမရှိပါ";
+"no.menu" = "မီနူးများမရှိပါ";
+
+"rating.title" = "အဆင့်သတ်မှတ်ပါ";
+"rating.thanks" = "အဆင့်သတ်မှတ်ပေးတဲ့အတွက် ကျေးဇူးတင်ရှိပါသည်";

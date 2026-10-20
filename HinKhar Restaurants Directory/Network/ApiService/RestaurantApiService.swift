@@ -18,6 +18,7 @@ class RestaurantApiService {
         requiresToken: Bool = false,
         responseType: T.Type
     ) async throws -> T {
+        try NetworkRequestGuard.requireConnection()
         
         guard var components = URLComponents(string: baseURL + endpoint) else {
             throw URLError(.badURL)
@@ -39,7 +40,7 @@ class RestaurantApiService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if requiresToken {
-            if let token = KeychainManager.shared.get("userToken") {
+            if let token = KeychainManager.shared.get(KeychainKeys.userToken) {
                 request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             }
         }

@@ -16,6 +16,7 @@ class ForgotPasswordViewModel: ObservableObject {
     @Published var apiSuccess = false
     
     @Published var successMessage = ""
+    @Published var expiredTime = 0
 
     func forgotPassword() async {
         isLoading = true
@@ -27,11 +28,19 @@ class ForgotPasswordViewModel: ObservableObject {
                 body: ForgotPasswordRequest(identifier: phoneOrEmail),
                 responseType: ForgotPasswordResponse.self
             )
-            successMessage = response.message
+            successMessage = response.message ?? ""
             print("message = \(successMessage)")
+            
+            expiredTime = response.expires_in
+            print("expiredTime = \(expiredTime)")
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             print("errorMessage = \(errorMessage)")
             showError = true

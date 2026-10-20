@@ -30,3 +30,7 @@ struct SubmitSuggestionData: Codable {
     let id: Int
     let comment: String
 }
+
+struct DeleteAccountResponse: Codable {
+    let message: String
+}

@@ -7,7 +7,7 @@
 
 struct ResetPasswordRequest: Encodable {
     let identifier: String
-    let otp: String
+    let reset_token: String
     let password: String
     let password_confirmation: String
 }

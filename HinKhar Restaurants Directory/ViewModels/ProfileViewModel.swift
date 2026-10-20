@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import UIKit
 
 @MainActor
 class ProfileViewModel: ObservableObject {
@@ -33,6 +34,8 @@ class ProfileViewModel: ObservableObject {
     
     @Published var user: User?
     
+    @Published var profileImageUrl = ""
+    
     private var cancellables = Set<AnyCancellable>()
 
     init() {
@@ -41,7 +44,7 @@ class ProfileViewModel: ObservableObject {
             .debounce(for: .milliseconds(600), scheduler: RunLoop.main)
             .sink { value in
                 // Treat this as 'finished typing'
-                KeychainManager.shared.save(value, forKey: "userName")
+                KeychainManager.shared.save(value, forKey: KeychainKeys.userName)
                 // Or call an API, validate, etc.
             }
             .store(in: &cancellables)
@@ -51,7 +54,7 @@ class ProfileViewModel: ObservableObject {
             .debounce(for: .milliseconds(600), scheduler: RunLoop.main)
             .sink { value in
                 // Treat this as 'finished typing'
-                KeychainManager.shared.save(value, forKey: "userAddress")
+                KeychainManager.shared.save(value, forKey: KeychainKeys.userAddress)
                 // Or call an API, validate, etc.
             }
             .store(in: &cancellables)
@@ -86,22 +89,29 @@ class ProfileViewModel: ObservableObject {
             self.townshipNameMM = response.user.township?.name_mm ?? ""
             self.address = response.user.address ?? ""
             
-            KeychainManager.shared.save(self.name, forKey: "userName")
-            KeychainManager.shared.save(self.gender.capitalizedFirstLetter, forKey: "userGender")
-            KeychainManager.shared.save(self.dob, forKey: "userDob")
-            KeychainManager.shared.save(String(self.regionId), forKey: "userRegionId")
-            KeychainManager.shared.save(self.regionName, forKey: "userRegionName")
-            KeychainManager.shared.save(self.regionNameMM, forKey: "userRegionNameMM")
-            KeychainManager.shared.save(String(self.districtId), forKey: "userDistrictId")
-            KeychainManager.shared.save(self.districtName, forKey: "userDistrictName")
-            KeychainManager.shared.save(self.districtNameMM, forKey: "userDistrictNameMM")
-            KeychainManager.shared.save(String(self.townshipId), forKey: "userTownshipId")
-            KeychainManager.shared.save(self.townshipName, forKey: "userTownshipName")
-            KeychainManager.shared.save(self.townshipNameMM, forKey: "userTownshipNameMM")
-            KeychainManager.shared.save(self.address, forKey: "userAddress")
+            self.profileImageUrl = response.user.profile_image ?? ""
+            
+            KeychainManager.shared.save(self.name, forKey: KeychainKeys.userName)
+            KeychainManager.shared.save(self.gender.capitalizedFirstLetter, forKey: KeychainKeys.userGender)
+            KeychainManager.shared.save(self.dob, forKey: KeychainKeys.userDob)
+            KeychainManager.shared.save(String(self.regionId), forKey: KeychainKeys.userRegionId)
+            KeychainManager.shared.save(self.regionName, forKey: KeychainKeys.userRegionName)
+            KeychainManager.shared.save(self.regionNameMM, forKey: KeychainKeys.userRegionNameMM)
+            KeychainManager.shared.save(String(self.districtId), forKey: KeychainKeys.userDistrictId)
+            KeychainManager.shared.save(self.districtName, forKey: KeychainKeys.userDistrictName)
+            KeychainManager.shared.save(self.districtNameMM, forKey: KeychainKeys.userDistrictNameMM)
+            KeychainManager.shared.save(String(self.townshipId), forKey: KeychainKeys.userTownshipId)
+            KeychainManager.shared.save(self.townshipName, forKey: KeychainKeys.userTownshipName)
+            KeychainManager.shared.save(self.townshipNameMM, forKey: KeychainKeys.userTownshipNameMM)
+            KeychainManager.shared.save(self.address, forKey: KeychainKeys.userAddress)
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             showError = true
         }
@@ -126,7 +136,7 @@ class ProfileViewModel: ObservableObject {
                         email: email?.isEmpty == true ? nil : email,
                         phone: phone?.isEmpty == true ? nil : phone,
                         gender: gender?.isEmpty == true ? nil : gender,
-                        date_of_birth: dob?.isEmpty == true ? nil : dob,
+                        date_of_birth: apiDateString(from: dob),
                         township_id: townshipId == 0 ? nil : townshipId,
                         address: address?.isEmpty == true ? nil : address
                     )
@@ -142,11 +152,81 @@ class ProfileViewModel: ObservableObject {
             print(response)
             updateSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoadingForUpdate = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             showError = true
         }
 
         isLoadingForUpdate = false
     }
-}
+    
+    func uploadImage(image: UIImage) async {
+        isLoadingForUpdate = true
+        
+        do {
+                // Compress image to 40% quality to save bandwidth
+                guard let imageData = image.jpegData(compressionQuality: 0.4) else { return }
+            
+                let boundary = "Boundary-\(UUID().uuidString)"
+                
+                var body = Data()
+                
+                // Multipart body formatting
+                body.append("--\(boundary)\r\n".data(using: .utf8)!)
+                body.append("Content-Disposition: form-data; name=\"profile_image\"; filename=\"profile_selfie.jpg\"\r\n".data(using: .utf8)!)
+                body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
+                body.append(imageData)
+                body.append("\r\n".data(using: .utf8)!)
+                body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+            
+            let response = try await UploadImageApiService.apiService.shared(
+                endpoint: "auth/profile",
+                method: "POST",
+                body: body,
+                contentType: "multipart/form-data; boundary=\(boundary)",
+                requiresToken: true,
+                responseType: UpdateProfileResponse.self
+                )
+            print(response)
+            updateSuccess = true
+            
+            await getUser()
+            
+        } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoadingForUpdate = false
+                return
+            }
 
+            errorMessage = error.localizedDescription
+            showError = true
+            print(errorMessage)
+        }
+        isLoadingForUpdate = false
+    }
+    
+    private func apiDateString(from displayDate: String?) -> String? {
+        guard let displayDate, !displayDate.isEmpty else {
+            return nil
+        }
+        
+        let inputFormatter = DateFormatter()
+        inputFormatter.locale = Locale(identifier: "en_US_POSIX")
+        inputFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        inputFormatter.dateFormat = "dd-MM-yyyy"
+        
+        guard let date = inputFormatter.date(from: displayDate) else {
+            return displayDate
+        }
+        
+        let outputFormatter = DateFormatter()
+        outputFormatter.locale = Locale(identifier: "en_US_POSIX")
+        outputFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        outputFormatter.dateFormat = "yyyy-MM-dd"
+        return outputFormatter.string(from: date)
+    }
+}

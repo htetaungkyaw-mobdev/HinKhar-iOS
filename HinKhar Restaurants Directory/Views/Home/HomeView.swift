@@ -14,17 +14,9 @@ struct HomeView: View {
     @State private var navigateToSearch: Bool = false
     @State private var navigateToSetting: Bool = false
     @State private var navigateToDetail: Bool = false
+    @State private var navigateToLogin: Bool = false
     
     @AppStorage("selectedLanguageCode") private var selectedLanguageCode: String = "en"
-
-//    private let dummyRestaurants: [Restaurant] = [
-//        .init(id: 1, imageUrl: "restaurant1", name: "Sunset Dine", priceRange: "$$", category: "Western"),
-//        .init(id: 2, imageUrl: "restaurant2", name: "Sushi World", priceRange: "$$$", category: "Japanese"),
-//        .init(id: 3, imageUrl: "restaurant3", name: "Spice Route", priceRange: "$", category: "Indian"),
-//        .init(id: 4, imageUrl: "restaurant4", name: "Green Bowl", priceRange: "$$", category: "Vegan"),
-//        .init(id: 5, imageUrl: "restaurant5", name: "Pasta Casa", priceRange: "$$", category: "Italian"),
-//        .init(id: 6, imageUrl: "restaurant6", name: "Burger Hub", priceRange: "$", category: "Fast Food")
-//    ]
     
     @State private var isFilter: Bool = false
     @State private var filterCount: Int = 0
@@ -37,6 +29,8 @@ struct HomeView: View {
     @State private var selectedCuisineTypeID: Int?
     
     @StateObject var vm = RestaurantViewModel()
+    
+    @State private var hasLoadedRestaurants = false
     
     private var displayRestaurants: [Restaurant] {
         // If API data exists, map it to display model; otherwise return empty list
@@ -58,6 +52,7 @@ struct HomeView: View {
             }()
 
             let category = r.restaurantCategory?.name ?? ""
+            let categoryMM = r.restaurantCategory?.nameMM ?? ""
             
             let isFavorited = r.isFavorited ?? false
 
@@ -69,17 +64,24 @@ struct HomeView: View {
             var promotionValue = ""
             if !r.promotionLists!.isEmpty {
                 isHasPromotion = true
-                promotionValue = r.promotionLists![0].discount_value ?? ""
+                let value = PromotionUtils.definePromotionTextToShow(
+                    discountType: r.promotionLists![0].discount_type ?? "",
+                    discountValue: r.promotionLists![0].discount_value ?? ""
+                )
+                promotionValue = value
             }
 
-            var isClosed = false
+            let isClosed = RestaurantStatusUtils.isRestaurantClosed(
+                openingHours: r.openingHours,
+                manualClosingDays: r.manualClosingDays
+            )
             
             return Restaurant(
                 id: r.id,
-                imageUrl: "",
-                name: r.name,
+                imageUrl: r.restaurantImageURL ?? "",
+                name: (selectedLanguageCode == "my" ? r.nameMM : r.name) ?? "",
                 priceRange: priceText,
-                category: category,
+                category: selectedLanguageCode == "my" ? categoryMM : category,
                 isFavorited: isFavorited,
                 badge: badgeName,
                 overallRating: overallRating,
@@ -99,16 +101,36 @@ struct HomeView: View {
                         HStack(spacing: 8) {
                             Image("Location")
                                 .renderingMode(.template)
-                                .foregroundStyle(Color("SecondaryColor"))
+                                .foregroundStyle(Color("PrimaryColor"))
                                 .onTapGesture {
-                                    navigateToNearBy = true
+                                    KeychainManager.shared.clearRestoredFilters()
+                                    selectedTownshipID = 0
+                                    selectedCuisineTypeID = 0
+                                    vm.min_price = ""
+                                    vm.max_price = ""
+                                    if KeychainManager.shared.get(KeychainKeys.userId) != "" {
+                                        navigateToNearBy = true
+                                    }
+                                    else {
+                                        navigateToLogin = true
+                                    }
                                     isTabBarHidden = true
                                 }
                             Text("home.nearByMe")
                                 .font(.custom("Futura-Medium", size: 16.0))
-                                .foregroundStyle(Color("PrimaryColor"))
+                                .foregroundStyle(.black)
                                 .onTapGesture {
-                                    navigateToNearBy = true
+                                    KeychainManager.shared.clearRestoredFilters()
+                                    selectedTownshipID = 0
+                                    selectedCuisineTypeID = 0
+                                    vm.min_price = ""
+                                    vm.max_price = ""
+                                    if KeychainManager.shared.get(KeychainKeys.userId) != "" {
+                                        navigateToNearBy = true
+                                    }
+                                    else {
+                                        navigateToLogin = true
+                                    }
                                     isTabBarHidden = true
                                 }
                         }
@@ -122,6 +144,12 @@ struct HomeView: View {
                                 .symbolRenderingMode(.monochrome)
                                 .foregroundStyle(Color("SecondaryColor"))
                                 .onTapGesture {
+                                    KeychainManager.shared.clearRestoredFilters()
+                                    selectedTownshipID = 0
+                                    selectedCuisineTypeID = 0
+                                    vm.min_price = ""
+                                    vm.max_price = ""
+                                    updateFilterCount()
                                     navigateToSearch = true
                                     isTabBarHidden = true
                                 }
@@ -129,7 +157,12 @@ struct HomeView: View {
                                 .symbolRenderingMode(.monochrome)
                                 .foregroundStyle(Color("PrimaryColor"))
                                 .onTapGesture {
-                                    navigateToSetting = true
+                                    if KeychainManager.shared.get(KeychainKeys.userId) != "" {
+                                        navigateToSetting = true
+                                    }
+                                    else {
+                                        navigateToLogin = true
+                                    }
                                     isTabBarHidden = true
                                 }
                         }
@@ -141,7 +174,7 @@ struct HomeView: View {
                     HStack {
                         Text("home.title")
                             .font(.custom("Futura-Medium", size: 18.0))
-                            .foregroundStyle(Color("PrimaryColor"))
+                            .foregroundStyle(.black)
                             .frame(width: 200, alignment: .leading)
                             .padding(.leading, 24)
                         
@@ -231,16 +264,6 @@ struct HomeView: View {
                             onTownshipChange: { newValue in
                                 // Update selection
                                 selectedTownshipID = newValue
-                                // Update filter count: count township if it's a non-zero selection
-                                // Start from zero and recompute based on active filters to avoid double counting
-                                var count = 0
-                                if let t = selectedTownshipID, t != 0 { count += 1 }
-                                if let c = selectedCuisineTypeID, c != 0 { count += 1 }
-                                let hasPrice = !(vm.min_price ?? "").isEmpty || !(vm.max_price ?? "").isEmpty
-                                if hasPrice { count += 1 }
-                                filterCount = count
-                                // Ensure filter UI is visible when a filter is applied
-                                if count > 0 { isFilter = true }
                                 Task {
                                     await fetchRestaurantsWithCurrentFilters()
                                 }
@@ -248,14 +271,11 @@ struct HomeView: View {
                             onCuisineTypeChange: { newValue in
                                 // Update selection
                                 selectedCuisineTypeID = newValue
-                                // Recompute filter count with price counted once
-                                var count = 0
-                                if let t = selectedTownshipID, t != 0 { count += 1 }
-                                if let c = selectedCuisineTypeID, c != 0 { count += 1 }
-                                let hasPrice = !(vm.min_price ?? "").isEmpty || !(vm.max_price ?? "").isEmpty
-                                if hasPrice { count += 1 }
-                                filterCount = count
-                                if count > 0 { isFilter = true }
+                                Task {
+                                    await fetchRestaurantsWithCurrentFilters()
+                                }
+                            },
+                            onClearAll: {
                                 Task {
                                     await fetchRestaurantsWithCurrentFilters()
                                 }
@@ -266,18 +286,6 @@ struct HomeView: View {
                                 let sanitizedMax = sanitizedIntString(max)
                                 vm.min_price = sanitizedMin
                                 vm.max_price = sanitizedMax
-
-                                // Recompute filter count based on active filters
-                                var count = 0
-                                if let t = selectedTownshipID, t != 0 { count += 1 }
-                                if let c = selectedCuisineTypeID, c != 0 { count += 1 }
-                                let hasPrice = !sanitizedMin.isEmpty || !sanitizedMax.isEmpty
-                                if hasPrice { count += 1 }
-                                filterCount = count
-
-                                // Ensure filter UI is visible when a filter is applied
-                                if count > 0 { isFilter = true }
-
                                 Task {
                                     await fetchRestaurantsWithCurrentFilters()
                                 }
@@ -286,60 +294,103 @@ struct HomeView: View {
                             .padding(.leading, 24)
                     }
                     
-                    // Data Grid / List
-                    Group {
-                        if isGrid {
-                            let columns = [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)]
-                            ScrollView {
-                                LazyVGrid(columns: columns, spacing: 16) {
-                                    ForEach(displayRestaurants) { restaurant in
-                                        RestaurantGrid(restaurant: restaurant)
-                                        .background(Color.white)
-                                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                                        .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
-                                        .onTapGesture {
-                                            restaurantId = restaurant.id
-                                            isTabBarHidden = true
-                                            navigateToDetail = true
+                    if vm.apiSuccess {
+                        Text(selectedLanguageCode == "my" ? "စုစုပေါင်း \(vm.restaurantStats?.subscribed_restaurants ?? 0) ဆိုင်ထဲမှ \(displayRestaurants.count) ဆိုင်ကို ပြသထားသည်" : "Showing \(displayRestaurants.count) of \(vm.restaurantStats?.subscribed_restaurants ?? 0) restaurants")
+                            .font(.custom("Futura-Medium", size: 14.0))
+                            .foregroundStyle(Color("PrimaryColor"))
+                            .padding(.leading, 24)
+                    }
+
+                    // Centered loading overlay
+                    if vm.isLoading {
+                        CommonLoading()
+                    }
+                    else if !displayRestaurants.isEmpty {
+                        // Data Grid / List
+                        Group {
+                            if isGrid {
+                                let columns = [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)]
+                                ScrollView {
+                                    LazyVGrid(columns: columns, spacing: 16) {
+                                        ForEach(displayRestaurants) { restaurant in
+                                            RestaurantGrid(restaurant: restaurant)
+                                                .background(Color.white)
+                                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                                .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
+                                                .onAppear {
+                                                    loadMoreRestaurantsIfNeeded(currentRestaurant: restaurant)
+                                                }
+                                                .onTapGesture {
+                                                    restaurantId = restaurant.id
+                                                    isTabBarHidden = true
+                                                    navigateToDetail = true
+                                                }
+                                        }
+                                        if vm.isLoadingMore {
+                                            footerSpinner
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 12)
                                         }
                                     }
+                                    .padding(.horizontal, 24)
+                                    .padding(.top, 8)
+                                    .padding(.bottom, 24)
                                 }
-                                .padding(.horizontal, 24)
-                                .padding(.top, 8)
-                                .padding(.bottom, 24)
-                            }
-                        } else {
-                            //Custom ListView
-                            ScrollView {
-                                LazyVStack(spacing: 12) {
-                                    ForEach(displayRestaurants) { restaurant in
-                                        RestaurantRow(restaurant: restaurant)
-                                            .padding(.horizontal, 24)
-                                            .onTapGesture {
-                                                restaurantId = restaurant.id
-                                                isTabBarHidden = true
-                                                navigateToDetail = true
-                                            }
+                            } else {
+                                //Custom ListView
+                                ScrollView {
+                                    LazyVStack(spacing: 12) {
+                                        ForEach(displayRestaurants) { restaurant in
+                                            RestaurantRow(restaurant: restaurant)
+                                                .padding(.horizontal, 24)
+                                                .onAppear {
+                                                    loadMoreRestaurantsIfNeeded(currentRestaurant: restaurant)
+                                                }
+                                                .onTapGesture {
+                                                    restaurantId = restaurant.id
+                                                    isTabBarHidden = true
+                                                    navigateToDetail = true
+                                                }
+                                        }
+                                        if vm.isLoadingMore {
+                                            footerSpinner
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 12)
+                                        }
                                     }
+                                    .padding(.top, 8)
+                                    .padding(.bottom, 24)
                                 }
-                                .padding(.top, 8)
-                                .padding(.bottom, 24)
                             }
                         }
+                    }
+                    else if hasLoadedRestaurants {
+                        Spacer()
+                        
+                        VStack {
+                            Image("NoRestaurant")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                                .opacity(0.5)
+                            
+                            Text("no.restaurant")
+                                .font(.custom("Futura-Medium", size: 16.0))
+                                .foregroundStyle(Color("PrimaryColor").opacity(0.5))
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        
+                        Spacer()
+                    }
+                    else {
+                        CommonLoading()
                     }
                     
                     Divider()
                         .background(Color.red)
                         .padding(.bottom, 90)
                 }
-                .task {
-                    await fetchRestaurantsWithCurrentFilters()
-                }
-
-                // Centered loading overlay
-                if vm.isLoading {
-                    CommonLoading()
-                }
+                
             }
             .overlay(alignment: .bottom) {
                 if let message = vm.errorMessage != "" ? vm.errorMessage : nil {
@@ -371,23 +422,34 @@ struct HomeView: View {
                     .navigationBarBackButtonHidden(true)
             }
             .navigationDestination(isPresented: $navigateToSetting) {
-                SettingView()
+                SettingView(isTabBarHidden: $isTabBarHidden)
                     .navigationBarBackButtonHidden(true)
             }
             .navigationDestination(isPresented: $navigateToDetail) {
                 RestaurantDetailView(restaurantId: restaurantId, comeFrom: "home")
                     .navigationBarBackButtonHidden(true)
             }
+            .navigationDestination(isPresented: $navigateToLogin) {
+                LoginView()
+                    .navigationBarBackButtonHidden(true)
+            }
             .onAppear {
                 print("HomeView")
                 isTabBarHidden = false
+                hasLoadedRestaurants = false
+                Task { await vm.getRestaurantStats() }
+                Task { await fetchRestaurantsWithCurrentFilters() }
+                hasLoadedRestaurants = true
             }
         }
         .environment(\.locale, Locale(identifier: selectedLanguageCode))
         .id(selectedLanguageCode)
     }
     
-    private func fetchRestaurantsWithCurrentFilters() async {
+    private func fetchRestaurantsWithCurrentFilters(append: Bool = false) async {
+        print("fetchRestaurantsWithCurrentFilters")
+        restoreStoredFilters()
+        
         vm.subscribed_list = "true"
         
         if let t_id = selectedTownshipID {
@@ -412,7 +474,32 @@ struct HomeView: View {
             vm.cuisine_type_id = ""
         }
         
-        await vm.getAllRestaurants()
+        updateFilterCount()
+        
+        await vm.getAllRestaurants(append: append)
+    }
+
+    private func loadMoreRestaurantsIfNeeded(currentRestaurant: Restaurant) {
+        guard let lastRestaurant = displayRestaurants.last,
+              lastRestaurant.id == currentRestaurant.id else {
+            return
+        }
+
+        guard !vm.isLoading,
+              !vm.isLoadingMore,
+              vm.hasMoreData else {
+            return
+        }
+
+        Task {
+            await fetchRestaurantsWithCurrentFilters(append: true)
+        }
+    }
+
+    private var footerSpinner: some View {
+        ProgressView()
+            .progressViewStyle(.circular)
+            .tint(Color("PrimaryColor"))
     }
     
     private func formatPriceString(_ raw: String) -> String {
@@ -436,6 +523,59 @@ struct HomeView: View {
         guard let intVal = Int(cleaned) else { return "" }
         return String(intVal)
     }
+    
+    func updateFilterCount() {
+        print("updateFilterCount")
+        // Update filter count: count township if it's a non-zero selection
+        // Start from zero and recompute based on active filters to avoid double counting
+        var count = 0
+        if let t = selectedTownshipID, t != 0 { count += 1 }
+        if let c = selectedCuisineTypeID, c != 0 { count += 1 }
+        let hasPrice = !vm.min_price.isEmpty || !vm.max_price.isEmpty
+        if hasPrice { count += 1 }
+        filterCount = count
+        print("filterCount = \(filterCount)")
+        // Ensure filter UI is visible when a filter is applied
+        if count > 0 { isFilter = true } else { isFilter = false }
+    }
+
+    private func restoreStoredFilters() {
+        print("restoreStoredFilters")
+        print("testTownship = \(KeychainManager.shared.get(KeychainKeys.filterTownshipID))")
+        print("testCT = \(KeychainManager.shared.get(KeychainKeys.filterCuisineTypeID))")
+        guard selectedTownshipID == nil,
+              let storedTownshipID = KeychainManager.shared.get(KeychainKeys.filterTownshipID),
+              let townshipID = Int(storedTownshipID) else {
+            return
+        }
+        selectedTownshipID = townshipID
+        print("selectedTownshipID = \(selectedTownshipID.map(String.init) ?? "nil")")
+        
+        guard selectedCuisineTypeID == nil,
+              let storedCuisineTypeID = KeychainManager.shared.get(KeychainKeys.filterCuisineTypeID),
+              let cuisineTypeID = Int(storedCuisineTypeID) else {
+            return
+        }
+        selectedCuisineTypeID = cuisineTypeID
+        print("selectedCuisineTypeID = \(selectedCuisineTypeID.map(String.init) ?? "nil")")
+        
+        guard vm.min_price.isEmpty,
+              let storedMinPrice = KeychainManager.shared.get(KeychainKeys.filterMinPrice) else {
+            return
+        }
+        vm.min_price = storedMinPrice
+        print("vm.min_price = \(vm.min_price)")
+        
+        guard vm.max_price.isEmpty,
+              let storedMaxPrice = KeychainManager.shared.get(KeychainKeys.filterMaxPrice) else {
+            return
+        }
+        vm.max_price = storedMaxPrice
+        print("vm.max_price = \(vm.max_price)")
+        
+        
+    }
+    
 }
 
 #Preview {

@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "viber_image_2026-03-12_14-38-56-079.jpg",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "viber_image_2026-03-12_14-38-56-079 1.jpg",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "viber_image_2026-03-12_14-38-56-079 2.jpg",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

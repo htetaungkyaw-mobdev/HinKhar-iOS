@@ -15,6 +15,16 @@ struct LoginResponse: Decodable {
     let access_token: String
 }
 
+struct LoginErrorResponse: Decodable {
+    let message: String?
+    let errors: [String: [String]]?
+}
+
+struct RegisterErrorResponse: Decodable {
+    let message: String?
+    let errors: [String: [String]]?
+}
+
 struct User: Decodable, Identifiable {
     let id: Int
     let name: String

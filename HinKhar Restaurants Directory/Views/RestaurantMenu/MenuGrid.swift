@@ -13,9 +13,9 @@ struct MenuGrid: View {
     
     var body: some View {
         ZStack {
-            VStack(alignment: .center, spacing: 8) {
+            VStack(alignment: .center, spacing: 2) {
                 ZStack {
-                    RemoteFillImage(url: URL(string: menu.imageUrl), height: 90, placeholderImageName: "DefaultRestaurantImage")
+                    RemoteFillImage(url: URL(string: menu.imageUrl), height: 90, placeholderImageName: "DefaultMenuImage")
                     
                     VStack {
                         HStack {
@@ -48,7 +48,8 @@ struct MenuGrid: View {
                 Text(selectedLanguageCode == "my" ? menu.nameMM : menu.name)
                     .font(.custom("Futura-Medium", size: 16.0))
                     .foregroundStyle(Color("PrimaryColor"))
-                    .lineLimit(1)
+//                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.leading, 8)
                     .padding(.trailing, 8)
                 
@@ -57,6 +58,12 @@ struct MenuGrid: View {
                     .foregroundStyle(Color("PrimaryColor").opacity(0.7))
                     .lineLimit(1)
                     .padding(.bottom, 8)
+                
+//                Text("ပွဲကြီး - 6,000/ ပွဲသေး - 5,000 ပွဲကြီး - 6,000/ ပွဲသေး - 5,000")
+//                    .font(.custom("Futura-Medium", size: 10.0))
+//                    .foregroundStyle(.black.opacity(0.7))
+//                    .padding(.leading, 4)
+//                    .padding(.trailing, 4)
             }
             .frame(width: 160)
             
@@ -74,10 +81,9 @@ struct MenuGrid: View {
             }
         }
         .environment(\.locale, Locale(identifier: selectedLanguageCode))
-        .id(selectedLanguageCode)
     }
 }
 
 #Preview {
-    MenuGrid(menu: RestaurantMenu(id: 0, imageUrl: "", name: "Test", nameMM: "TestMM", price: "0", isAvailable: 0, isSignature: 1))
+    MenuGrid(menu: RestaurantMenu(id: 0, imageUrl: "", name: "Test", nameMM: "TestMM", price: "0", description: "", isAvailable: 0, isSignature: 1))
 }

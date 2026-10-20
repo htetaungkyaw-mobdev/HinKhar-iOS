@@ -244,7 +244,7 @@ struct ChangePasswordView: View {
 //                    .navigationBarBackButtonHidden(true)
 //            }
             .navigationDestination(isPresented: $navigateToSetting) {
-                SettingView()
+                SettingView(isTabBarHidden: .constant(true))
                     .navigationBarBackButtonHidden(true)
             }
             
@@ -258,7 +258,9 @@ struct ChangePasswordView: View {
             if vm.showError {
                 VStack {
                     Spacer()
-                    ToastView(message: vm.errorMessage)
+                    ToastView(message: vm.errorMessage, onDismiss: {
+                        vm.showError = false
+                    })
                         .onTapGesture { vm.showError = false }
                 }
                 .animation(.easeInOut, value: vm.showError)
@@ -296,4 +298,3 @@ private struct TitleBar: View {
 #Preview {
     ChangePasswordView()
 }
-

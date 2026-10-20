@@ -23,6 +23,11 @@ struct CustomTabBar: View {
                         withAnimation(.spring()) {
                             selectedTab = tab
                         }
+                        
+                        KeychainManager.shared.save("0", forKey: KeychainKeys.filterTownshipID)
+                        KeychainManager.shared.save("0", forKey: KeychainKeys.filterCuisineTypeID)
+                        KeychainManager.shared.save("", forKey: KeychainKeys.filterMinPrice)
+                        KeychainManager.shared.save("", forKey: KeychainKeys.filterMaxPrice)
                     }
                 )
             }
@@ -79,7 +84,8 @@ private struct TabButton: View {
         .id(selectedLanguageCode)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(isSelected ? Color.red : Color.yellow.opacity(1), lineWidth: 1)
+                .stroke(Color("PrimaryColor"), lineWidth: 1)
+//                .stroke(isSelected ? Color.red : Color.yellow.opacity(1), lineWidth: 1)
         )
     }
 }

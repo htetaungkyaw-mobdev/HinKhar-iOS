@@ -7,6 +7,7 @@
 import SwiftUI
 
 struct OpeningHourRow: View {
+    @AppStorage("selectedLanguageCode") private var selectedLanguageCode: String = "en"
     let openingHour: OpeningHour
     var body: some View {
         HStack(spacing: 16) {
@@ -14,24 +15,23 @@ struct OpeningHourRow: View {
                 Text(openingHour.openingDay!)
                     .font(.custom("Futura-Medium", size: 14.0))
                     .frame(maxWidth: 100, alignment: .leading)
-                    .padding(.top, 4)
+                    
                 
                 Text(openingHour.openingTime!)
                     .font(.custom("Futura-Medium", size: 14.0))
                     .frame(alignment: .leading)
-                    .padding(.top, 4)
                 
                 Text("-")
                     .font(.custom("Futura-Medium", size: 14.0))
                     .frame(alignment: .leading)
-                    .padding(.top, 4)
                 
                 Text(openingHour.closingTime!)
                     .font(.custom("Futura-Medium", size: 14.0))
                     .frame(alignment: .leading)
-                    .padding(.top, 4)
             }
             .padding(.leading, 8)
+            .padding(.top, 4)
+            .padding(.bottom, 4)
             
             Spacer()
         }

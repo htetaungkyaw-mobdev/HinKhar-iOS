@@ -27,6 +27,7 @@ struct CustomFiltersView: View {
     
     var onTownshipChange: (Int?) -> Void = { _ in }
     var onCuisineTypeChange: (Int?) -> Void = { _ in }
+    var onClearAll: () -> Void = {}
     
     @State private var minPriceText: String = ""
     @State private var maxPriceText: String = ""
@@ -34,6 +35,17 @@ struct CustomFiltersView: View {
     @State private var debounceTask: Task<Void, Never>?
     
     @StateObject var vm = GeneralDataViewModel()
+    @State private var didLoadStoredTownship = false
+    @State private var didLoadStoredCuisineType = false
+    @State private var didLoadStoredMinPrice = false
+    @State private var didLoadStoredMaxPrice = false
+
+    private enum PriceField {
+        case min
+        case max
+    }
+
+    @FocusState private var focusedField: PriceField?
     
     private var displayTownships: [GeneralData] {
         // Map API townships to display model; handle optional safely
@@ -65,20 +77,21 @@ struct CustomFiltersView: View {
                 .font(.custom("Futura-Medium", size: 16.0))
                 .underline()
                 .onTapGesture {
+                    dismissPriceKeyboard()
                     selectedTownshipID = nil
+                    KeychainManager.shared.save(String(selectedTownshipID ?? 0), forKey: KeychainKeys.filterTownshipID)
                     selectedCuisineTypeID = nil
+                    KeychainManager.shared.save(String(selectedCuisineTypeID ?? 0), forKey: KeychainKeys.filterCuisineTypeID)
                     minPriceText = ""
                     maxPriceText = ""
-                    onTownshipChange(selectedTownshipID)
-                    onCuisineTypeChange(selectedCuisineTypeID)
-                    onPriceChange(minPriceText, maxPriceText)
+                    onClearAll()
                 }
                 .foregroundColor(.red)
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .padding(.horizontal)
             
             Text("filter.byTownship")
-                .font(.custom("Futura-Medium", size: 16.0))
+                .font(.custom("Futura-Medium", size: 14.0))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
             
@@ -94,18 +107,20 @@ struct CustomFiltersView: View {
                             .background(
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                                     .stroke(isSelected ? Color("PrimaryColor") : Color("SecondaryColor"), lineWidth: 1)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                            .fill(isSelected ? Color("PrimaryColor") : Color.white)
-                                    )
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(isSelected ? Color("PrimaryColor") : Color.white)
                             )
-                            .onTapGesture {
-                                if isSelected {
-                                    selectedTownshipID = nil
-                                } else {
+                        )
+                        .onTapGesture {
+                            dismissPriceKeyboard()
+                            if isSelected {
+                                selectedTownshipID = nil
+                            } else {
                                     selectedTownshipID = township.id
                                 }
                                 onTownshipChange(selectedTownshipID)
+                                KeychainManager.shared.save(String(selectedTownshipID ?? 0), forKey: KeychainKeys.filterTownshipID)
                             }
                     }
                 }
@@ -113,7 +128,7 @@ struct CustomFiltersView: View {
             }
             
             Text("filter.byCuisineType")
-                .font(.custom("Futura-Medium", size: 16.0))
+                .font(.custom("Futura-Medium", size: 14.0))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
             
@@ -129,18 +144,20 @@ struct CustomFiltersView: View {
                             .background(
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                                     .stroke(isSelected ? Color("PrimaryColor") : Color("SecondaryColor"), lineWidth: 1)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                            .fill(isSelected ? Color("PrimaryColor") : Color.white)
-                                    )
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(isSelected ? Color("PrimaryColor") : Color.white)
                             )
-                            .onTapGesture {
-                                if isSelected {
-                                    selectedCuisineTypeID = nil
-                                } else {
+                        )
+                        .onTapGesture {
+                            dismissPriceKeyboard()
+                            if isSelected {
+                                selectedCuisineTypeID = nil
+                            } else {
                                     selectedCuisineTypeID = cuisineType.id
                                 }
                                 onCuisineTypeChange(selectedCuisineTypeID)
+                                KeychainManager.shared.save(String(selectedCuisineTypeID ?? 0), forKey: KeychainKeys.filterCuisineTypeID)
                             }
                     }
                 }
@@ -149,7 +166,7 @@ struct CustomFiltersView: View {
             
             HStack {
                 Text("filter.byPriceRange")
-                    .font(.custom("Futura-Medium", size: 16.0))
+                    .font(.custom("Futura-Medium", size: 14.0))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
                 
@@ -165,6 +182,8 @@ struct CustomFiltersView: View {
                     .keyboardType(.numberPad)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
+                    .focused($focusedField, equals: .min)
+                    .submitLabel(.done)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 12)
                     .background(
@@ -176,17 +195,20 @@ struct CustomFiltersView: View {
                             )
                     )
                     .textFieldStyle(.plain)
-                    .onChange(of: minPriceText) { newValue in
+                    .onChange(of: minPriceText) { _, newValue in
                         debounceTask?.cancel()
                         debounceTask = Task { @MainActor in
                             try? await Task.sleep(nanoseconds: 600_000_000) // 0.6s
                             onPriceChange(newValue.isEmpty || newValue == "Min" ? nil : newValue,
                                           maxPriceText.isEmpty || maxPriceText == "Max" ? nil : maxPriceText)
+                            KeychainManager.shared.save(minPriceText, forKey: KeychainKeys.filterMinPrice)
                         }
                     }
                     .onSubmit {
                         onPriceChange(minPriceText.isEmpty || minPriceText == "Min" ? nil : minPriceText,
                                       maxPriceText.isEmpty || maxPriceText == "Max" ? nil : maxPriceText)
+                        KeychainManager.shared.save(minPriceText, forKey: KeychainKeys.filterMinPrice)
+                        dismissPriceKeyboard()
                     }
                     
                     
@@ -198,6 +220,8 @@ struct CustomFiltersView: View {
                     .font(.custom("FuturaCyrillicMedium", size: 14.0))
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
+                    .focused($focusedField, equals: .max)
+                    .submitLabel(.done)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 12)
                     .background(
@@ -209,27 +233,89 @@ struct CustomFiltersView: View {
                             )
                     )
                     .textFieldStyle(.plain)
-                    .onChange(of: maxPriceText) { newValue in
+                    .onChange(of: maxPriceText) { _, newValue in
                         debounceTask?.cancel()
                         debounceTask = Task { @MainActor in
                             try? await Task.sleep(nanoseconds: 600_000_000) // 0.6s
                             onPriceChange(minPriceText == "Min" ? nil : minPriceText,
                                           newValue.isEmpty || newValue == "Max" ? nil : newValue)
+                            KeychainManager.shared.save(maxPriceText, forKey: KeychainKeys.filterMaxPrice)
                         }
                     }
                     .onSubmit {
                         onPriceChange(minPriceText == "Min" ? nil : minPriceText,
                                       maxPriceText.isEmpty || maxPriceText == "Max" ? nil : maxPriceText)
+                        KeychainManager.shared.save(maxPriceText, forKey: KeychainKeys.filterMaxPrice)
+                        dismissPriceKeyboard()
                     }
             }
-            .padding(.horizontal)
-        }
-        .task {
-            await vm.getTownshipsByRegionId(regionId: 10)
-            await vm.getAllCuisineTypes()
-        }
+                .padding(.horizontal)
+            }
+            .task {
+                if !didLoadStoredTownship {
+                    didLoadStoredTownship = true
+                    if let filterTownshipId = KeychainManager.shared.get(KeychainKeys.filterTownshipID),
+                       let storedTownshipID = Int(filterTownshipId) {
+                        selectedTownshipID = storedTownshipID
+                    }
+                }
+                
+                if !didLoadStoredCuisineType {
+                    didLoadStoredCuisineType = true
+                    if let filterCuisineTypeId = KeychainManager.shared.get(KeychainKeys.filterCuisineTypeID),
+                       let storedCuisineTypeID = Int(filterCuisineTypeId) {
+                        selectedCuisineTypeID = storedCuisineTypeID
+                    }
+                }
+                
+                if !didLoadStoredMinPrice {
+                    didLoadStoredMinPrice = true
+                    if let storedMinPrice = KeychainManager.shared.get(KeychainKeys.filterMinPrice) {
+                        minPriceText = storedMinPrice
+                    }
+                }
+                
+                if !didLoadStoredMaxPrice {
+                    didLoadStoredMaxPrice = true
+                    if let storedMaxPrice = KeychainManager.shared.get(KeychainKeys.filterMaxPrice) {
+                        maxPriceText = storedMaxPrice
+                    }
+                }
+                
+                await vm.getTownshipsByRegionId(regionId: 10)
+                await vm.getAllCuisineTypes()
+            }
+            .onTapGesture {
+                dismissPriceKeyboard()
+            }
         .environment(\.locale, Locale(identifier: selectedLanguageCode))
         .id(selectedLanguageCode)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if focusedField != nil {
+                HStack {
+                    Spacer()
+                    Button("Done") {
+                        dismissPriceKeyboard()
+                    }
+                    .font(.custom("Futura-Medium", size: 15.0))
+                    .foregroundColor(Color("PrimaryColor"))
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 16)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(Color.white)
+                            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 2)
+                    )
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+                .background(Color.white.opacity(0.92))
+            }
+        }
+    }
+
+    private func dismissPriceKeyboard() {
+        focusedField = nil
     }
 }
 

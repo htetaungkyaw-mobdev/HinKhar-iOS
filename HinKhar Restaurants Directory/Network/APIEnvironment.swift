@@ -23,7 +23,7 @@ enum APIEnvironment {
         case .uat:
             return "https://testing.hinkhar.com/api/v1/"
         case .prod:
-            return "https://hinkhar.com/api/v1/"
+            return "https://admin.hinkhar.com/api/v1/"
         }
     }
 }

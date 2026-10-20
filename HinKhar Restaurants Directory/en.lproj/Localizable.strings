@@ -14,6 +14,11 @@
 "login.continueAsGuest" = "Continue as Guest";
 "login.loading" = "Loading…";
 "login.success" = "Login Success";
+"login.error.phoneOrEmailRequired" = "Please enter your phone number or email";
+"login.error.passwordRequired" = "Please enter your password";
+"login.error.credentialsIncorrect" = "The provided credentials are incorrect.";
+"login.error.accountDeactivated" = "Account is deactivated. Please contact admin.";
+
 "app.version" = "Version : %@";
 "language.en" = "EN";
 "language.mm" = "MM";
@@ -32,12 +37,25 @@
 "register.placeholder.confirmPassword" = "Confirm your password";
 "register.agree.to" = "Agree to";
 "register.and" = "and";
+"register.success" = "Successful Registration";
+"register.alert.email" = "Please enter your email address to continue.";
+"register.alert.email.format" = "Please enter a valid email address.";
+"register.alert.phone" = "Please enter your phone number to continue.";
+"register.alert.email.title" = "Enter email address";
+"register.alert.phone.title" = "Enter phone number";
+"register.agree.title" = "Please click the checkbox to agree!";
+"register.agree.message" = "You must agree to the Privacy Policy and Terms of Service to continue.";
+"register.error.duplicatePhone" = "Phone number already registered";
+"register.error.password.min8" = "The password field must be at least 8 characters.";
+"register.error.password.notMatch" = "The password field confirmation does not match.";
 
 "otp.verify.phone" = "Verify your mobile number";
 "otp.verify.email" = "Verify your email address";
 "otp.6digits.code" = "6-digits code has been sent to";
 "otp.code" = "OTP Code";
 "otp.button.verify" = "Verify";
+"otp.expired.time" = "This code will be expired in ";
+"otp.button.resend" = "Resend OTP";
 
 "forgot.message" = "Enter your mobile number or email to reset your password";
 "forgot.placeholder" = "Enter your phone or email";
@@ -138,4 +156,12 @@
 "menu.notAvailable" = "Not available right now";
 
 "search.title" = "Search Anything you want!";
-"search.placeholder" = "Restaurant Name or Menu Name";
+"search.placeholder1" = "What would you like to eat?";
+"search.placeholder2" = "Which restaurant are you looking for?";
+
+"no.restaurant" = "There is no restaurant!";
+"no.menu" = "There is no menu!";
+
+"rating.title" = "Please rate";
+"rating.thanks" = "Thanks for your rating.";
+

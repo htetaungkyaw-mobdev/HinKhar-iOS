@@ -10,6 +10,7 @@ struct RestaurantMenu: Identifiable {
     let name: String
     let nameMM: String
     let price: String
+    let description: String
     let isAvailable: Int
     let isSignature: Int
 }

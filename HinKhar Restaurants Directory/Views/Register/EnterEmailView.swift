@@ -18,12 +18,16 @@ struct EnterEmailView: View {
     @State private var selectedLanguage: Language = .en
     @State private var email: String = ""
     
-    @State private var enterEmail = false
     @State private var showAlert = false
+    @State private var alertMessage = "Please enter your email address to continue."
+    
+    @State private var expiredTime = 0
     
     @State private var navigateToLogin = false
     @State private var navigateToVerifyOTP = false
     @State private var navigateToRegister = false
+    
+    @StateObject var register_vm = RegisterViewModel()
     
     var body: some View {
         NavigationStack {
@@ -81,8 +85,8 @@ struct EnterEmailView: View {
                                 TextField("", text: $email)
                                     .font(.custom("Futura-Medium", size: 16.0))
                                     .padding(.vertical, 12)
-                                    .keyboardType(.phonePad)
-                                    .textContentType(.telephoneNumber)
+                                    .keyboardType(.emailAddress)
+                                    .textContentType(.emailAddress)
                                     .textInputAutocapitalization(.never)
                                     .autocorrectionDisabled()
                                     .foregroundStyle(Color("WhiteColor"))
@@ -102,9 +106,22 @@ struct EnterEmailView: View {
 
                         // Continue button
                         Button {
-                            if enterEmail {
-                                navigateToRegister = true
+                            let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+                            if trimmedEmail.isEmpty {
+                                alertMessage = "register.alert.email"
+                                showAlert = true
+                            } else if isValidEmail(trimmedEmail) {
+                                Task {
+                                    register_vm.phoneOrEmail = trimmedEmail
+                                    await register_vm.sendOtp()
+                                    
+                                    if register_vm.apiSuccess {
+                                        expiredTime = register_vm.expiredTime
+                                        navigateToVerifyOTP = true
+                                    }
+                                }
                             } else {
+                                alertMessage = "register.alert.email.format"
                                 showAlert = true
                             }
                         } label: {
@@ -122,10 +139,10 @@ struct EnterEmailView: View {
                                 .stroke(Color("PrimaryColor"), lineWidth: 2)
                         )
                         .padding(.top, 30)
-                      .alert("Enter email address", isPresented: $showAlert) {
+                      .alert("register.alert.email.title", isPresented: $showAlert) {
                         Button("OK", role: .cancel) { }
                     } message: {
-                        Text("Please enter your email address to continue.")
+                        Text(LocalizedStringKey(alertMessage))
                     }
                     }
                 }
@@ -177,15 +194,20 @@ struct EnterEmailView: View {
                 LoginView()
                     .navigationBarBackButtonHidden(true)
             }
-            .navigationDestination(isPresented: $navigateToRegister) {
-//                VerifyOTPCodeView(type: "phone", value: phone)
-//                    .navigationBarBackButtonHidden(true)
-                RegisterView().navigationBarBackButtonHidden(true)
+            .navigationDestination(isPresented: $navigateToVerifyOTP) {
+                VerifyOTPCodeView(type: "email", value: email, expiredTime: expiredTime, comeFrom: "registration")
+                    .navigationBarBackButtonHidden(true)
+//                RegisterView(phoneOrEmail: phone).navigationBarBackButtonHidden(true)
             }
             
         }
         .environment(\.locale, Locale(identifier: selectedLanguageCode))
         .id(selectedLanguageCode)
+    }
+    
+    private func isValidEmail(_ input: String) -> Bool {
+        let emailRegex = "^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+        return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: input)
     }
 }
 

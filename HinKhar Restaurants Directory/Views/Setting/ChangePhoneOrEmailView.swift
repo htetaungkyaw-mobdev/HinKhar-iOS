@@ -25,7 +25,11 @@ struct ChangePhoneOrEmailView: View {
     
     @State private var navigateToSetting = false
     @State private var navigateToVerifyOTP = false
-    @State private var navigateToRegister = false
+    
+    @State private var expiredTime = 0
+    
+    @StateObject var vm = ChangePhoneOrEmailViewModel()
+    @StateObject var register_vm = RegisterViewModel()
     
     init(type: String, value: String) {
         self.initialType = type
@@ -66,12 +70,12 @@ struct ChangePhoneOrEmailView: View {
             .frame(maxWidth: .infinity, alignment: .init(horizontal: .leading, vertical: .top))
             
             VStack {
-                if !initialValue.isEmpty {
+//                if !initialValue.isEmpty {
                     Image("ChangePhoneOrEmail")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 200, height: 200)
-                }
+//                }
                 
                 VStack(alignment: .center, spacing: 16) {
 
@@ -105,8 +109,8 @@ struct ChangePhoneOrEmailView: View {
                                           prompt: Text(LocalizedStringKey(hintText)).foregroundColor(.white.opacity(0.5)))
                                     .font(.custom("Futura-Medium", size: 16.0))
                                     .padding(.vertical, 12)
-                                    .keyboardType(.phonePad)
-                                    .textContentType(.telephoneNumber)
+                                    .keyboardType(.emailAddress)
+                                    .textContentType(.emailAddress)
                                     .textInputAutocapitalization(.never)
                                     .autocorrectionDisabled()
                                     .foregroundStyle(Color("WhiteColor"))
@@ -126,10 +130,39 @@ struct ChangePhoneOrEmailView: View {
 
                         // Continue button
                         Button {
-                            if enterPhone {
-                                navigateToRegister = true
-                            } else {
-                                showAlert = true
+                            if type == "phone" {
+                                if !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                    Task {
+                                        vm.phone = value
+                                        await vm.requestOtpChangePhone()
+                                        
+                                        if vm.apiSuccess {
+                                            expiredTime = vm.expiredTime
+                                            navigateToVerifyOTP = true
+                                        }
+                                    }
+                                }
+                                else {
+                                    showAlert = true
+                                }
+                            }
+                            else {
+                                let trimmedEmail = value.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if trimmedEmail.isEmpty {
+                                    showAlert = true
+                                } else if isValidEmail(trimmedEmail) {
+                                    Task {
+                                        vm.email = value
+                                        await vm.requestOtpChangeEmail()
+                                        
+                                        if vm.apiSuccess {
+                                            expiredTime = vm.expiredTime
+                                            navigateToVerifyOTP = true
+                                        }
+                                    }
+                                } else {
+                                    showAlert = true
+                                }
                             }
                         } label: {
                             Text(initialValue.isEmpty ? "set" : "change")
@@ -159,16 +192,31 @@ struct ChangePhoneOrEmailView: View {
                 
             }
             .navigationDestination(isPresented: $navigateToSetting) {
-                SettingView()
+                SettingView(isTabBarHidden: .constant(true))
                     .navigationBarBackButtonHidden(true)
             }
-            .navigationDestination(isPresented: $navigateToRegister) {
-//                VerifyOTPCodeView(type: "phone", value: phone)
-//                    .navigationBarBackButtonHidden(true)
-                RegisterView().navigationBarBackButtonHidden(true)
+            .navigationDestination(isPresented: $navigateToVerifyOTP) {
+                VerifyOTPCodeView(type: type, value: value, expiredTime: expiredTime, comeFrom: "setting")
+                    .navigationBarBackButtonHidden(true)
+//                RegisterView(phoneOrEmail: phone).navigationBarBackButtonHidden(true)
             }
-            
+//            .onChange(of: vm.apiSuccess) { _, newValue in
+//                if newValue {
+//                    if type == "phone" {
+//                        KeychainManager.shared.save(value, forKey: KeychainKeys.userPhone)
+//                    }
+//                    else {
+//                        KeychainManager.shared.save(value, forKey: KeychainKeys.userEmail)
+//                    }
+//                    navigateToSetting = true
+//                }
+//            }
         }
+    }
+    
+    private func isValidEmail(_ input: String) -> Bool {
+        let emailRegex = "^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+        return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: input)
     }
 }
 

@@ -35,6 +35,11 @@ class GeneralDataViewModel: ObservableObject {
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             showError = true
         }
@@ -58,6 +63,11 @@ class GeneralDataViewModel: ObservableObject {
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             showError = true
         }
@@ -81,6 +91,11 @@ class GeneralDataViewModel: ObservableObject {
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             showError = true
         }
@@ -104,6 +119,11 @@ class GeneralDataViewModel: ObservableObject {
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             showError = true
         }
@@ -127,6 +147,11 @@ class GeneralDataViewModel: ObservableObject {
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             showError = true
         }

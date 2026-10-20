@@ -8,6 +8,8 @@ import SwiftUI
 
 struct FavoritesView: View {
     
+    @AppStorage("selectedLanguageCode") private var selectedLanguageCode: String = "en"
+    
     @Environment(\.dismiss) private var dismiss
     @State private var navigateToDetail: Bool = false
     
@@ -33,6 +35,7 @@ struct FavoritesView: View {
             }()
 
             let category = r.favoritable.restaurantCategory?.name ?? ""
+            let categoryMM = r.favoritable.restaurantCategory?.nameMM ?? ""
 
             let isFavorited = r.favoritable.isFavorited ?? false
             
@@ -47,14 +50,17 @@ struct FavoritesView: View {
                 promotionValue = r.favoritable.promotionLists![0].discount_value ?? ""
             }
             
-            var isClosed = false
+            let isClosed = RestaurantStatusUtils.isRestaurantClosed(
+                openingHours: r.favoritable.openingHours,
+                manualClosingDays: r.favoritable.manualClosingDays
+            )
 
             return Restaurant(
                 id: r.favoritable.id,
-                imageUrl: "",
-                name: r.favoritable.name,
+                imageUrl: r.favoritable.restaurantImageURL ?? "",
+                name: (selectedLanguageCode == "my" ? r.favoritable.nameMM : r.favoritable.name) ?? "",
                 priceRange: priceText,
-                category: category,
+                category: selectedLanguageCode == "my" ? categoryMM : category,
                 isFavorited: isFavorited,
                 badge: badgeName,
                 overallRating: overallRating,
@@ -73,26 +79,46 @@ struct FavoritesView: View {
                         dismiss()
                     }
                     
-                    Group {
-                        let columns = [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)]
-                        ScrollView {
-                            LazyVGrid(columns: columns, spacing: 16) {
-                                ForEach(displayRestaurants) { restaurant in
-                                    
-                                    RestaurantGrid(restaurant: restaurant)
-    //                                        .onAppear { print("Restaurant \(restaurant.id) isFavorited =", restaurant.isFavorited) }
-                                    .background(Color.white)
-                                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                                    .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
-                                    .onTapGesture {
-                                        restaurantId = restaurant.id
-                                        navigateToDetail = true
+                    if displayRestaurants.isEmpty {
+                        Spacer()
+                        
+                        VStack {
+                            Image("NoRestaurant")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                                .opacity(0.5)
+                            
+                            Text("no.restaurant")
+                                .font(.custom("Futura-Medium", size: 16.0))
+                                .foregroundStyle(Color("PrimaryColor").opacity(0.5))
+                        }
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        
+                        Spacer()
+                    }
+                    else {
+                        Group {
+                            let columns = [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)]
+                            ScrollView {
+                                LazyVGrid(columns: columns, spacing: 16) {
+                                    ForEach(displayRestaurants) { restaurant in
+                                        
+                                        RestaurantGrid(restaurant: restaurant)
+                                        //                                        .onAppear { print("Restaurant \(restaurant.id) isFavorited =", restaurant.isFavorited) }
+                                            .background(Color.white)
+                                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                            .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 4)
+                                            .onTapGesture {
+                                                restaurantId = restaurant.id
+                                                navigateToDetail = true
+                                            }
                                     }
                                 }
+                                .padding(.horizontal, 24)
+                                .padding(.top, 8)
+                                .padding(.bottom, 24)
                             }
-                            .padding(.horizontal, 24)
-                            .padding(.top, 8)
-                            .padding(.bottom, 24)
                         }
                     }
                 }

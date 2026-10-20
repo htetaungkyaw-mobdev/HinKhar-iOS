@@ -7,8 +7,24 @@
 
 import Foundation
 
+struct ApiRestaurantStat: Codable {
+    let data: ApiRestaurantStatData
+}
+
+struct ApiRestaurantStatData: Codable {
+    let total_restaurants: Int
+    let promotion_restaurants: Int
+    let subscribed_restaurants: Int
+}
+
 struct RestaurantListResponse: Codable {
     let data: [ApiRestaurant]
+//    let meta: ApiMeta
+}
+
+struct ApiMeta: Codable {
+    let current_page: Int
+    let total: Int
 }
 
 struct RestaurantDetailResponse: Codable {
@@ -19,6 +35,7 @@ struct ApiRestaurant: Codable {
     let id: Int
     let name: String
     let nameMM: String?
+    let description: String?
     let contacts: [ApiContact]?
     let latitude: String?
     let longitude: String?
@@ -36,9 +53,10 @@ struct ApiRestaurant: Codable {
     let isFavorited: Bool?
     let badge: String?
     let promotionLists: [ApiPromotionList]?
+    let parent_id: Int?
     
     enum CodingKeys: String, CodingKey {
-        case id, name, contacts, latitude, longitude, address, badge
+        case id, name, description, contacts, latitude, longitude, address, badge, parent_id
         case nameMM = "name_mm"
         case openingHours = "opening_hours"
         case minimumPrice = "minimum_price"

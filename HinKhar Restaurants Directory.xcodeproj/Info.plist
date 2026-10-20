@@ -18,6 +18,10 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to let you take a profile photo.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to let you choose a profile photo.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>viber</string>

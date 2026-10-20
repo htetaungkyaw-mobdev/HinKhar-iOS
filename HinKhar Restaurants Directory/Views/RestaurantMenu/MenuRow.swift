@@ -15,7 +15,7 @@ struct MenuRow: View {
         ZStack {
             HStack(alignment: .top, spacing: 12) {
                 ZStack {
-                    RemoteFillImage(url: URL(string: menu.imageUrl), width: 130, height: 110, placeholderImageName: "DefaultRestaurantImage")
+                    RemoteFillImage(url: URL(string: menu.imageUrl), width: 130, height: 110, placeholderImageName: "DefaultMenuImage")
                     
                     VStack {
                         HStack {
@@ -47,7 +47,7 @@ struct MenuRow: View {
                     Text(selectedLanguageCode == "my" ? menu.nameMM : menu.name)
                         .font(.custom("Futura-Medium", size: 16.0))
                         .foregroundStyle(Color("PrimaryColor"))
-                        .lineLimit(1)
+//                        .lineLimit(1)
 
                     // Price range or any metadata row
                     Text(menu.price)
@@ -80,10 +80,9 @@ struct MenuRow: View {
             }
         }
         .environment(\.locale, Locale(identifier: selectedLanguageCode))
-        .id(selectedLanguageCode)
     }
 }
 
 #Preview {
-    MenuRow(menu: RestaurantMenu(id: 0, imageUrl: "", name: "Test", nameMM: "TestMM", price: "0", isAvailable: 0, isSignature: 1))
+    MenuRow(menu: RestaurantMenu(id: 0, imageUrl: "", name: "Test", nameMM: "TestMM", price: "0", description: "", isAvailable: 0, isSignature: 1))
 }

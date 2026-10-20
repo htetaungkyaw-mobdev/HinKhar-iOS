@@ -9,11 +9,12 @@ import SwiftUI
 struct RootView: View {
     
     @EnvironmentObject var auth: AuthViewModel
-    @EnvironmentObject var toast: ToastManager
     
-    @State private var isShowedWelcome = KeychainManager.shared.get("isShowedWelcome") ?? "no"
+    @State private var isShowedWelcome = KeychainManager.shared.get(KeychainKeys.isShowedWelcome) ?? "no"
     
-    @State private var isLoggedIn = KeychainManager.shared.get("isLoggedIn") ?? "no"
+    @State private var isLoggedIn = KeychainManager.shared.get(KeychainKeys.isLoggedIn) ?? "no"
+    @State private var isShowingNetworkToast = false
+    @State private var networkToastID = UUID()
     
     var body: some View {
         ZStack {
@@ -30,12 +31,34 @@ struct RootView: View {
                 WelcomeScreensView()
                     .preferredColorScheme(.light)
             }
+
+            if isShowingNetworkToast {
+                VStack {
+                    Spacer()
+
+                    ToastView(message: NetworkRequestGuard.noInternetMessage) {
+                        withAnimation {
+                            isShowingNetworkToast = false
+                        }
+                    }
+                    .id(networkToastID)
+                    .padding(.bottom, 48)
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .zIndex(1)
+            }
         }
         .onAppear {
             if isLoggedIn == "yes" {
                 auth.isAuthenticated = true
             } else {
                 auth.isAuthenticated = false
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .networkConnectionUnavailable)) { _ in
+            networkToastID = UUID()
+            withAnimation {
+                isShowingNetworkToast = true
             }
         }
         .onChange(of: isLoggedIn) { newValue in
@@ -48,4 +71,3 @@ struct RootView: View {
     RootView()
         .environmentObject(AuthViewModel())
 }
-

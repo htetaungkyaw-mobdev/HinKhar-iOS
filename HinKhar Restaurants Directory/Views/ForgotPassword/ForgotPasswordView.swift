@@ -13,10 +13,13 @@ struct ForgotPasswordView: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var navigateToLogin: Bool = false
+    @State private var navigateToVerifyOtp: Bool = false
 //    @State private var phoneOrEmail: String = ""
     @State private var showAlert = false
     
     @StateObject var vm = ForgotPasswordViewModel()
+    
+    @State private var expiredTime = 0
     
     private var isEmail: Bool {
         // Simple heuristic: contains one '@' and a dot after it
@@ -50,8 +53,7 @@ struct ForgotPasswordView: View {
         NavigationStack {
             VStack {
                 TitleBar(title: "login.forgotPassword") {
-//                    navigateToLogin = true
-                    dismiss()
+                    navigateToLogin = true
                 }
                 
                 VStack(spacing: 12) {
@@ -89,7 +91,7 @@ struct ForgotPasswordView: View {
                         TextField("", text: $vm.phoneOrEmail)
                             .font(.custom("Futura-Medium", size: 16.0))
                             .padding(.vertical, 12)
-                            .keyboardType(adaptiveKeyboard)
+//                            .keyboardType(adaptiveKeyboard)
                             .textInputAutocapitalization(.never)
                             .autocorrectionDisabled()
                             .foregroundStyle(Color("WhiteColor"))
@@ -112,10 +114,14 @@ struct ForgotPasswordView: View {
                 // Confirm button
                 Button {
                     if enterPhoneOrEmail {
-//                        Task {
-//                            await vm.forgotPassword()
-//                        }
-                        vm.apiSuccess = true
+                        Task {
+                            await vm.forgotPassword()
+                            
+                            if vm.apiSuccess {
+                                expiredTime = vm.expiredTime
+                                navigateToVerifyOtp = true
+                            }
+                        }
                     } else {
                         showAlert = true
                     }
@@ -138,8 +144,9 @@ struct ForgotPasswordView: View {
                 
                 Spacer()
             }
-            .navigationDestination(isPresented: $vm.apiSuccess) {
-                ResetPasswordView(identifier: "09123456789", otp: "123456")
+            .navigationDestination(isPresented: $navigateToVerifyOtp) {
+                VerifyOTPCodeView(type: isPhone ? "phone" : "email", value: vm.phoneOrEmail,
+                                  expiredTime: expiredTime, comeFrom: "password_reset")
                     .navigationBarBackButtonHidden(true)
             }
             .navigationDestination(isPresented: $navigateToLogin) {
@@ -157,7 +164,9 @@ struct ForgotPasswordView: View {
             if vm.showError {
                 VStack {
                     Spacer()
-                    ToastView(message: vm.errorMessage)
+                    ToastView(message: vm.errorMessage, onDismiss: {
+                        vm.showError = false
+                    })
                         .onTapGesture { vm.showError = false }
                 }
                 .animation(.easeInOut, value: vm.showError)

@@ -21,6 +21,9 @@ class SettingViewModel: ObservableObject {
     @Published var apiSuccessForSubmitSuggestion = false
     @Published var submitSuggestionData: SubmitSuggestionData? = nil
     
+    @Published var apiSuccessForDeleteAccount = false
+    @Published var deleteAccountMessage = ""
+    
     func getAllSettings() async {
         isLoading = true
         
@@ -37,6 +40,11 @@ class SettingViewModel: ObservableObject {
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             showError = true
         }
@@ -47,7 +55,7 @@ class SettingViewModel: ObservableObject {
     func submitSuggestion() async {
         isLoadingForSubmitSuggestion = true
         
-        if let userIdString = KeychainManager.shared.get("userId"), let parsedId = Int(userIdString) {
+        if let userIdString = KeychainManager.shared.get(KeychainKeys.userId), let parsedId = Int(userIdString) {
             userId = parsedId
         } else {
             errorMessage = String(localized: "error.missingUserId")
@@ -75,6 +83,11 @@ class SettingViewModel: ObservableObject {
             
             apiSuccessForSubmitSuggestion = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoadingForSubmitSuggestion = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             showError = true
         }
@@ -83,9 +96,8 @@ class SettingViewModel: ObservableObject {
     }
     
     func deleteAccount() async {
-//        isLoadingForSubmitSuggestion = true
         
-        if let userIdString = KeychainManager.shared.get("userId"), let parsedId = Int(userIdString) {
+        if let userIdString = KeychainManager.shared.get(KeychainKeys.userId), let parsedId = Int(userIdString) {
             userId = parsedId
         } else {
             errorMessage = String(localized: "error.missingUserId")
@@ -96,28 +108,28 @@ class SettingViewModel: ObservableObject {
         }
         
         print("userId = \(userId)")
-        print("suggestionText = \(suggestionText)")
         
         do {
             let response = try await ApiService.apiService.shared(
-                endpoint: "suggestions",
+                endpoint: "auth/users/\(userId)/deactivate",
                 method: "POST",
-                body: SubmitSuggestionRequest(comment: suggestionText),
                 requiresToken: true,
-                responseType: SubmitSuggestionResponse.self
+                responseType: DeleteAccountResponse.self
             )
             
             print(response)
             
-            self.submitSuggestionData = response.data
+            self.deleteAccountMessage = response.message
             
-            apiSuccessForSubmitSuggestion = true
+            apiSuccessForDeleteAccount = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             showError = true
         }
-        
-        isLoadingForSubmitSuggestion = false
     }
 }
-

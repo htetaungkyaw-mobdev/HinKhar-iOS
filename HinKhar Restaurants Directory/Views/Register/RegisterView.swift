@@ -13,10 +13,19 @@ struct RegisterView: View {
         case en = "EN"
         var id: String { rawValue }
     }
+    
+    enum Field {
+        case name
+        case password
+        case confirmPassword
+    }
 
+    @EnvironmentObject var auth: AuthViewModel
+    
     @AppStorage("selectedLanguageCode") private var selectedLanguageCode: String = "en"
     @State private var selectedLanguage: Language = .en
-    @State private var phone: String = ""
+    @FocusState private var focusedField: Field?
+    @State private var name: String = ""
     @State private var password: String = ""
     @State private var isPasswordVisible: Bool = false
     @State private var agreedToTerms: Bool = false
@@ -33,6 +42,8 @@ struct RegisterView: View {
     @State private var showPolicySheet = false
     @State private var policyHTML: String = ""
     @State private var selectedWebValue: String = ""
+    
+    let phoneOrEmail: String
     
     private var displaySetting: [Setting] {
         // If API data exists, map it to display model; otherwise return empty list
@@ -97,19 +108,24 @@ struct RegisterView: View {
                             )
                             
                             ZStack(alignment: .leading) {
-                                if phone.isEmpty {
+                                if vm.name.isEmpty {
                                     Text("register.placeholder.name")
                                         .font(.custom("Futura-Medium", size: 16.0))
                                         .foregroundStyle(Color("WhiteColor").opacity(0.6))
                                 }
-                                TextField("", text: $phone)
+                                TextField("", text: $vm.name)
                                     .font(.custom("Futura-Medium", size: 16.0))
                                     .padding(.vertical, 12)
-                                    .keyboardType(.phonePad)
-                                    .textContentType(.telephoneNumber)
+                                    .keyboardType(.default)
+                                    .textContentType(.name)
                                     .textInputAutocapitalization(.never)
                                     .autocorrectionDisabled()
                                     .foregroundStyle(Color("WhiteColor"))
+                                    .focused($focusedField, equals: .name)
+                                    .submitLabel(.next)
+                                    .onSubmit {
+                                        focusedField = .password
+                                    }
                             }
                         }
                         .background(
@@ -138,27 +154,33 @@ struct RegisterView: View {
                             )
 
                             ZStack(alignment: .leading) {
-                                if password.isEmpty {
+                                if vm.password.isEmpty {
                                     Text("register.placeholder.password")
                                         .font(.custom("Futura-Medium", size: 16.0))
                                         .foregroundStyle(Color("WhiteColor").opacity(0.6))
                                 }
                                 Group {
                                     if isPasswordVisible {
-                                        TextField("", text: $password)
+                                        TextField("", text: $vm.password)
                                             .font(.custom("Futura-Medium", size: 16.0))
                                             .foregroundStyle(Color("WhiteColor"))
                                             .textContentType(.password)
                                             .textInputAutocapitalization(.never)
                                             .autocorrectionDisabled()
+                                            .focused($focusedField, equals: .password)
                                     } else {
-                                        SecureField("", text: $password)
+                                        SecureField("", text: $vm.password)
                                             .font(.custom("Futura-Medium", size: 16.0))
                                             .foregroundStyle(Color("WhiteColor"))
                                             .textContentType(.password)
+                                            .focused($focusedField, equals: .password)
                                     }
                                 }
                                 .padding(.vertical, 12)
+                                .submitLabel(.next)
+                                .onSubmit {
+                                    focusedField = .confirmPassword
+                                }
                             }
 
                             Button(action: { isPasswordVisible.toggle() }) {
@@ -187,27 +209,33 @@ struct RegisterView: View {
                             )
 
                             ZStack(alignment: .leading) {
-                                if password.isEmpty {
+                                if vm.confirmPassword.isEmpty {
                                     Text("register.placeholder.confirmPassword")
                                         .font(.custom("Futura-Medium", size: 16.0))
                                         .foregroundStyle(Color("WhiteColor").opacity(0.6))
                                 }
                                 Group {
                                     if isPasswordVisible {
-                                        TextField("", text: $password)
+                                        TextField("", text: $vm.confirmPassword)
                                             .font(.custom("Futura-Medium", size: 16.0))
                                             .foregroundStyle(Color("WhiteColor"))
                                             .textContentType(.password)
                                             .textInputAutocapitalization(.never)
                                             .autocorrectionDisabled()
+                                            .focused($focusedField, equals: .confirmPassword)
                                     } else {
-                                        SecureField("", text: $password)
+                                        SecureField("", text: $vm.confirmPassword)
                                             .font(.custom("Futura-Medium", size: 16.0))
                                             .foregroundStyle(Color("WhiteColor"))
                                             .textContentType(.password)
+                                            .focused($focusedField, equals: .confirmPassword)
                                     }
                                 }
                                 .padding(.vertical, 12)
+                                .submitLabel(.done)
+                                .onSubmit {
+                                    focusedField = nil
+                                }
                             }
 
                             Button(action: { isPasswordVisible.toggle() }) {
@@ -304,8 +332,32 @@ struct RegisterView: View {
 
                         // Register button
                         Button {
+                            focusedField = nil
+
+                            let name = vm.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                            let password = vm.password.trimmingCharacters(in: .whitespacesAndNewlines)
+                            let confirmPassword = vm.confirmPassword.trimmingCharacters(in: .whitespacesAndNewlines)
+
+                            if name.isEmpty {
+                                vm.errorMessage = "register.placeholder.name"
+                                vm.showError = true
+                                return
+                            }
+
+                            if password.isEmpty {
+                                vm.errorMessage = "register.placeholder.password"
+                                vm.showError = true
+                                return
+                            }
+
+                            if confirmPassword.isEmpty {
+                                vm.errorMessage = "register.placeholder.confirmPassword"
+                                vm.showError = true
+                                return
+                            }
+
                             if agreedToTerms {
-                                navigateToHome = true
+                                Task { await vm.register(phoneOrEmail: phoneOrEmail) }
                             } else {
                                 showAlert = true
                             }
@@ -325,10 +377,10 @@ struct RegisterView: View {
                         )
                         .padding(.top, 20)
                         .padding(.bottom, 20)
-                        .alert("Please agree to the terms", isPresented: $showAlert) {
+                        .alert("register.agree.title", isPresented: $showAlert) {
                             Button("OK", role: .cancel) { }
                         } message: {
-                            Text("You must agree to the Privacy Policy and Terms of Service to continue.")
+                            Text("register.agree.message")
                         }
                     }
                 }
@@ -393,8 +445,24 @@ struct RegisterView: View {
                 CommonWebView()
                     .navigationBarBackButtonHidden(true)
             }
+            .overlay(alignment: .bottom) {
+                if vm.showError {
+                    ToastView(message: vm.displayErrorMessage)
+                        .padding(.bottom, 48)
+                        .onDisappear { vm.showError = false }
+                }
+            }
             .task {
                 await setting_vm.getAllSettings()
+            }
+            .onChange(of: vm.registerSuccess) { _, newValue in
+                if newValue {
+                    auth.isAuthenticated = true
+                    navigateToHome = true
+                }
+            }
+            .onTapGesture {
+                focusedField = nil
             }
             
         }
@@ -418,5 +486,6 @@ struct HTMLWebViewForRegister: UIViewRepresentable {
 }
 
 #Preview {
-    RegisterView()
+    RegisterView(phoneOrEmail: "09123456789")
+        .environmentObject(AuthViewModel())
 }

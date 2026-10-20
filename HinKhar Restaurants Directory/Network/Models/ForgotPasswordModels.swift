@@ -10,5 +10,8 @@ struct ForgotPasswordRequest: Encodable {
 }
 
 struct ForgotPasswordResponse: Decodable {
-    let message: String
+    let success: Bool
+    let message: String?
+    let channel: String
+    let expires_in: Int
 }

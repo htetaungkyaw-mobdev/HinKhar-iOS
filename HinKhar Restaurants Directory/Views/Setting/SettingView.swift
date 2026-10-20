@@ -7,6 +7,20 @@
 import SwiftUI
 import StoreKit
 
+private extension Bundle {
+    var appVersion: String {
+        infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+    }
+
+    var buildNumber: String {
+        infoDictionary?["CFBundleVersion"] as? String ?? "1"
+    }
+
+    var appVersionDisplay: String {
+        "\(appVersion) (\(buildNumber))"
+    }
+}
+
 // Reusable row for settings list
 private struct SettingRow: View {
     let title: String
@@ -52,6 +66,7 @@ private struct SettingRow: View {
 }
 
 struct SettingView: View {
+    @Binding var isTabBarHidden: Bool
     @EnvironmentObject var auth: AuthViewModel
     
     @Environment(\.requestReview) private var requestReview
@@ -61,6 +76,7 @@ struct SettingView: View {
     
     @State private var navigateToHome: Bool = false
     @State private var navigateToChangePhoneOrEmail: Bool = false
+    @State private var navigateToChangePassword: Bool = false
     @State private var navigateToCommonWebView: Bool = false
     @State private var navigateToLogin: Bool = false
     @State private var showDeleteDialog: Bool = false
@@ -72,8 +88,8 @@ struct SettingView: View {
     
     @State private var showContactUsDialog: Bool = false
     
-    @State private var userPhone = KeychainManager.shared.get("userPhone") ?? ""
-    @State private var userEmail = KeychainManager.shared.get("userEmail") ?? ""
+    @State private var userPhone = KeychainManager.shared.get(KeychainKeys.userPhone) ?? ""
+    @State private var userEmail = KeychainManager.shared.get(KeychainKeys.userEmail) ?? ""
     
     @State private var type = ""
     @State private var value = ""
@@ -153,7 +169,7 @@ struct SettingView: View {
                     title: "setting.changePassword",
                     trailingText: "*********"
                 ) {
-                    // Hook up when ready
+                    navigateToChangePassword = true
                 }
                 
                 //Suggestion to Our App
@@ -251,7 +267,7 @@ struct SettingView: View {
                 //Rate Our App
                 SettingRow(title: "setting.rate") {
                     requestReview()
-                    let appID = "APP_ID"
+                    let appID = "6769714863"
                     if let url = URL(string: "https://apps.apple.com/app/id\(appID)?action=write-review") {
                         UIApplication.shared.open(url)
                     }
@@ -269,7 +285,7 @@ struct SettingView: View {
                 
                 // Logout button
                 Button {
-                    KeychainManager.shared.save("no", forKey: "isLoggedIn")
+                    KeychainManager.shared.save("no", forKey: KeychainKeys.isLoggedIn)
                     auth.isAuthenticated = false
                     navigateToLogin = true
                 } label: {
@@ -290,7 +306,7 @@ struct SettingView: View {
                 
                 Spacer()
                 
-                Text(String(format: String(localized: "app.version"), "1.0.0"))
+                Text(String(format: String(localized: "app.version"), Bundle.main.appVersionDisplay))
                     .font(.custom("Futura-Medium", size: 12.0))
                     .foregroundStyle(.black)
             }
@@ -321,11 +337,16 @@ struct SettingView: View {
                     onCancel: { showDeleteDialog = false },
                     onConfirmDelete: {
                         showDeleteDialog = false
+                        Task { await vm.deleteAccount() }
                     }
                 )
             )
             .navigationDestination(isPresented: $navigateToChangePhoneOrEmail) {
                 ChangePhoneOrEmailView(type: type, value: value)
+                    .navigationBarBackButtonHidden(true)
+            }
+            .navigationDestination(isPresented: $navigateToChangePassword) {
+                ChangePasswordView()
                     .navigationBarBackButtonHidden(true)
             }
             .navigationDestination(isPresented: $navigateToCommonWebView) {
@@ -343,6 +364,13 @@ struct SettingView: View {
                     vm.suggestionText = ""
                 }
             }
+            .onChange(of: vm.apiSuccessForDeleteAccount) { _, newValue in
+                if newValue {
+                    KeychainManager.shared.save("no", forKey: KeychainKeys.isLoggedIn)
+                    auth.isAuthenticated = false
+                    navigateToLogin = true
+                }
+            }
             .task {
                 await vm.getAllSettings()
             }
@@ -357,7 +385,9 @@ struct SettingView: View {
             if vm.showError {
                 VStack {
                     Spacer()
-                    ToastView(message: vm.errorMessage)
+                    ToastView(message: vm.errorMessage, onDismiss: {
+                        vm.showError = false
+                    })
                         .onTapGesture { vm.showError = false }
                 }
                 .animation(.easeInOut, value: vm.showError)
@@ -376,17 +406,19 @@ struct SettingView: View {
             //                .animation(.easeInOut, value: "Submit Success")
             //            }
         }
-        .toast(
-            isPresented: $vm.apiSuccessForSubmitSuggestion,
-            message: "Successfully Submitted."
-        )
+        .onAppear {
+            isTabBarHidden = true
+            
+            userPhone = KeychainManager.shared.get(KeychainKeys.userPhone) ?? ""
+            userEmail = KeychainManager.shared.get(KeychainKeys.userEmail) ?? ""
+        }
+//        .onDisappear { isTabBarHidden = false }
         .environment(\.locale, Locale(identifier: selectedLanguageCode))
         .id(selectedLanguageCode)
     }
 }
 
 #Preview {
-    SettingView()
+    SettingView(isTabBarHidden: .constant(true))
         .environmentObject(AuthViewModel())
 }
-

@@ -38,4 +38,12 @@ class KeychainManager {
         }
         return nil
     }
+
+    func clearRestoredFilters() {
+        save("0", forKey: KeychainKeys.filterTownshipID)
+        save("0", forKey: KeychainKeys.filterCuisineTypeID)
+        save("", forKey: KeychainKeys.filterMinPrice)
+        save("", forKey: KeychainKeys.filterMaxPrice)
+        save("", forKey: KeychainKeys.filterSearchKeyword)
+    }
 }

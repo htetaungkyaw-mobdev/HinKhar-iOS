@@ -64,7 +64,7 @@ struct CommonWebView: View {
                     .ignoresSafeArea(.container, edges: .bottom)
             }
             .navigationDestination(isPresented: $navigateToSetting) {
-                SettingView()
+                SettingView(isTabBarHidden: .constant(true))
                     .navigationBarBackButtonHidden(true)
             }
         }

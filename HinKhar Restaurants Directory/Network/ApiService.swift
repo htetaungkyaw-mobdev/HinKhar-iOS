@@ -18,6 +18,7 @@ class ApiService {
         requiresToken: Bool = false,
         responseType: T.Type
     ) async throws -> T {
+        try NetworkRequestGuard.requireConnection()
 
         guard let url = URL(string: baseURL + endpoint) else {
             throw URLError(.badURL)
@@ -29,7 +30,7 @@ class ApiService {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         if requiresToken {
-            if let token = KeychainManager.shared.get("userToken") {
+            if let token = KeychainManager.shared.get(KeychainKeys.userToken) {
                 request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             }
         }

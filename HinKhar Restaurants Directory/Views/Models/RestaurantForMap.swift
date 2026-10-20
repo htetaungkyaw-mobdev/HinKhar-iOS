@@ -10,7 +10,6 @@ import MapKit
 struct RestaurantForMap: Identifiable, Equatable, Hashable {
     let id: Int
     let name: String
-    let nameMM: String
     let coordinate: CLLocationCoordinate2D
     let imageUrl: String
     let priceRange: String

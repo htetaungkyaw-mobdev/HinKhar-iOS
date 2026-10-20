@@ -48,7 +48,7 @@ struct NearByRestaurantsView: View {
             span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
         )
     )
-    @State private var selected: NearbyRestaurant?
+    @State private var selected: RestaurantForMap?
     @State private var restaurants: [NearbyRestaurant] = NearbyRestaurant.samples
     @Environment(\.dismiss) private var dismiss
     
@@ -68,6 +68,8 @@ struct NearByRestaurantsView: View {
     private var currentCoordinate: CLLocationCoordinate2D? {
         locationManager.lastLocation?.coordinate
     }
+    
+    @AppStorage("selectedLanguageCode") private var selectedLanguageCode: String = "en"
     
     private var nearByRestaurants: [RestaurantForMap] {
         // If API data exists, map it to display model; otherwise return empty list
@@ -89,6 +91,7 @@ struct NearByRestaurantsView: View {
             }()
 
             let category = r.restaurantCategory?.name ?? ""
+            let categoryMM = r.restaurantCategory?.nameMM ?? ""
             
             let isFavorited = r.isFavorited ?? false
 
@@ -103,16 +106,18 @@ struct NearByRestaurantsView: View {
                 promotionValue = r.promotionLists![0].discount_value ?? ""
             }
             
-            let isClosed = false
+            let isClosed = RestaurantStatusUtils.isRestaurantClosed(
+                openingHours: r.openingHours,
+                manualClosingDays: r.manualClosingDays
+            )
 
             return RestaurantForMap(
                 id: r.id,
-                name: r.name,
-                nameMM:r.nameMM!,
+                name: (selectedLanguageCode == "my" ? r.nameMM : r.name) ?? "",
                 coordinate: CLLocationCoordinate2D(latitude: Double(r.latitude ?? "0") ?? 0, longitude: Double(r.longitude ?? "0") ?? 0),
                 imageUrl: r.restaurantImageURL ?? "",
                 priceRange: priceText,
-                category: category,
+                category: selectedLanguageCode == "my" ? categoryMM : category,
                 isFavorited: isFavorited,
                 badge: badgeName,
                 overallRating: overallRating,
@@ -122,55 +127,6 @@ struct NearByRestaurantsView: View {
             )
         }
     }
-    
-//    private var displayRestaurants: [Restaurant] {
-//        // If API data exists, map it to display model; otherwise return empty list
-//        guard !vm.restaurants.isEmpty else { return [] }
-//
-//        return vm.restaurants.map { r in
-//            // Build price text from min/max if available; adjust formatting as needed
-//            let priceText: String = {
-//                let minRaw = r.minimumPrice?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-//                let maxRaw = r.maximumPrice?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-//                let min = formatPriceString(minRaw)
-//                let max = formatPriceString(maxRaw)
-//                switch (min.isEmpty, max.isEmpty) {
-//                case (false, false): return "\(min) – \(max)"
-//                case (false, true):  return min
-//                case (true, false):  return max
-//                default:             return ""
-//                }
-//            }()
-//
-//            let category = r.restaurantCategory?.name ?? ""
-//            
-//            let isFavorited = r.isFavorited ?? false
-//
-//            let badgeName = r.badge ?? ""
-//
-//            let overallRating = r.overallRating ?? 0.0
-//
-//            var isHasPromotion = false
-//            var promotionValue = ""
-//            if !r.promotionLists!.isEmpty {
-//                isHasPromotion = true
-//                promotionValue = r.promotionLists![0].discount_value ?? ""
-//            }
-//
-//            return Restaurant(
-//                id: r.id,
-//                imageUrl: "",
-//                name: r.name,
-//                priceRange: priceText,
-//                category: category,
-//                isFavorited: isFavorited,
-//                badge: badgeName,
-//                overallRating: overallRating,
-//                isHasPromotion: isHasPromotion,
-//                promotionValue: promotionValue
-//            )
-//        }
-//    }
 
     var body: some View {
         NavigationStack {
@@ -253,12 +209,12 @@ struct NearByRestaurantsView: View {
                     .padding(.horizontal, 20)
                     
                     if isGrid {
-                        if let coord = currentCoordinate {
-                            Text("Lat: \(coord.latitude), Lon: \(coord.longitude)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 20)
-                        }
+//                        if let coord = currentCoordinate {
+//                            Text("Lat: \(coord.latitude), Lon: \(coord.longitude)")
+//                                .font(.caption)
+//                                .foregroundStyle(.secondary)
+//                                .padding(.horizontal, 20)
+//                        }
                         Map(position: $position, selection: $selected) {
                             ForEach(nearByRestaurants) { restaurant in
                                 Annotation(restaurant.name, coordinate: restaurant.coordinate) {
@@ -271,7 +227,7 @@ struct NearByRestaurantsView: View {
 //                                            .frame(width: 8, height: 8)
 //                                    }
                                     Image("CustomMarker")
-                                    .accessibilityLabel(Text(restaurant.name))
+                                        .accessibilityLabel(Text(restaurant.name))
                                 }
                                 .tag(restaurant)
                             }
@@ -280,20 +236,41 @@ struct NearByRestaurantsView: View {
 //                        Text(String(restaurantCount))
                     }
                     else {
-                        //Custom ListView
-                        ScrollView {
-                            LazyVStack(spacing: 12) {
-                                ForEach(nearByRestaurants) { restaurant in
-                                    RestaurantRowNearBy(restaurant: restaurant)
-                                        .padding(.horizontal, 24)
-                                        .onTapGesture {
-                                            restaurantId = restaurant.id
-                                            navigateToDetail = true
-                                        }
-                                }
+                        
+                        if nearByRestaurants.isEmpty {
+                            Spacer()
+                            
+                            VStack {
+                                Image("NoRestaurant")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 100, height: 100)
+                                    .opacity(0.5)
+                                
+                                Text("no.restaurant")
+                                    .font(.custom("Futura-Medium", size: 16.0))
+                                    .foregroundStyle(Color("PrimaryColor").opacity(0.5))
                             }
-                            .padding(.top, 8)
-                            .padding(.bottom, 24)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            
+                            Spacer()
+                        }
+                        else {
+                            //Custom ListView
+                            ScrollView {
+                                LazyVStack(spacing: 12) {
+                                    ForEach(nearByRestaurants) { restaurant in
+                                        RestaurantRowNearBy(restaurant: restaurant)
+                                            .padding(.horizontal, 24)
+                                            .onTapGesture {
+                                                restaurantId = restaurant.id
+                                                navigateToDetail = true
+                                            }
+                                    }
+                                }
+                                .padding(.top, 8)
+                                .padding(.bottom, 24)
+                            }
                         }
                     }
                     //                .ignoresSafeArea(.container, edges: .bottom)
@@ -302,23 +279,23 @@ struct NearByRestaurantsView: View {
             .navigationBarHidden(true)
             .task {
                 
-                vm.latitude = "21.8953020"
-                vm.longitude = "96.0962370"
-                await vm.getNearByRestaurants()
-                restaurantCount = vm.nearByRestaurants.count
+//                vm.latitude = "21.8953020"
+//                vm.longitude = "96.0962370"
+//                await vm.getNearByRestaurants()
+//                restaurantCount = vm.nearByRestaurants.count
                 
-                // Request permission; location updates will arrive via delegate
+//                 Request permission; location updates will arrive via delegate
 //                locationManager.requestWhenInUseAuthorization()
-                
-                // If we already have a location (e.g., returning to the screen), use it immediately
-//                if let coord = locationManager.lastLocation?.coordinate {
-//                                        vm.latitude = String(coord.latitude)
-//                                        vm.longitude = String(coord.longitude)
+//                
+//                 If we already have a location (e.g., returning to the screen), use it immediately
+                if let coord = locationManager.lastLocation?.coordinate {
+                                        vm.latitude = String(coord.latitude)
+                                        vm.longitude = String(coord.longitude)
 //                                        vm.latitude = "21.8953020"
 //                                        vm.longitude = "96.0962370"
-//                    await vm.getNearByRestaurants()
-//                    restaurantCount = vm.nearByRestaurants.count
-//                }
+                    await vm.getNearByRestaurants()
+                    restaurantCount = vm.nearByRestaurants.count
+                }
             }
             .navigationDestination(isPresented: $navigateToHome) {
                 CustomTabView(selectedTab: .home)
@@ -341,10 +318,15 @@ struct NearByRestaurantsView: View {
                 Task {
                     vm.latitude = String(coord.latitude)
                     vm.longitude = String(coord.longitude)
+//                    vm.latitude = "21.9543390"
+//                    vm.longitude = "96.1097060"
                     await vm.getNearByRestaurants()
                     restaurantCount = vm.nearByRestaurants.count
                 }
             }
+            .onAppear {
+                            locationManager.requestWhenInUseAuthorization()
+                        }
         }
     }
      

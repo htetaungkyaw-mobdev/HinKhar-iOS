@@ -64,19 +64,19 @@ struct UpdateProfileView: View {
         
         switch tagFromCommonData {
         case "gender":
-            KeychainManager.shared.save(selectedName, forKey: "userGender")
+            KeychainManager.shared.save(selectedName, forKey: KeychainKeys.userGender)
         case "region":
-            KeychainManager.shared.save(String(selectedId), forKey: "userRegionId")
-            KeychainManager.shared.save(selectedName, forKey: "userRegionName")
-            KeychainManager.shared.save(selectedNameMM, forKey: "userRegionNameMM")
+            KeychainManager.shared.save(String(selectedId), forKey: KeychainKeys.userRegionId)
+            KeychainManager.shared.save(selectedName, forKey: KeychainKeys.userRegionName)
+            KeychainManager.shared.save(selectedNameMM, forKey: KeychainKeys.userRegionNameMM)
         case "district":
-            KeychainManager.shared.save(String(selectedId), forKey: "userDistrictId")
-            KeychainManager.shared.save(selectedName, forKey: "userDistrictName")
-            KeychainManager.shared.save(selectedNameMM, forKey: "userDistrictNameMM")
+            KeychainManager.shared.save(String(selectedId), forKey: KeychainKeys.userDistrictId)
+            KeychainManager.shared.save(selectedName, forKey: KeychainKeys.userDistrictName)
+            KeychainManager.shared.save(selectedNameMM, forKey: KeychainKeys.userDistrictNameMM)
         case "township":
-            KeychainManager.shared.save(String(selectedId), forKey: "userTownshipId")
-            KeychainManager.shared.save(selectedName, forKey: "userTownshipName")
-            KeychainManager.shared.save(selectedNameMM, forKey: "userTownshipNameMM")
+            KeychainManager.shared.save(String(selectedId), forKey: KeychainKeys.userTownshipId)
+            KeychainManager.shared.save(selectedName, forKey: KeychainKeys.userTownshipName)
+            KeychainManager.shared.save(selectedNameMM, forKey: KeychainKeys.userTownshipNameMM)
         default:
             break
         }
@@ -430,7 +430,7 @@ struct UpdateProfileView: View {
                         Button("alert.done") {
                             vm.dob = dobFormatter.string(from: tempDate)
                             showDatePicker = false
-                            KeychainManager.shared.save(vm.dob, forKey: "userDob")
+                            KeychainManager.shared.save(vm.dob, forKey: KeychainKeys.userDob)
                         }
                         .padding()
                     }
@@ -465,19 +465,19 @@ struct UpdateProfileView: View {
                 } else {
                     // Apply selection coming back from CommonDataListView
                     
-                    vm.name = KeychainManager.shared.get("userName")!
-                    vm.gender = KeychainManager.shared.get("userGender")!
-                    vm.dob = KeychainManager.shared.get("userDob")!
-                    vm.regionId = Int(KeychainManager.shared.get("userRegionId")!) ?? 0
-                    vm.regionName = KeychainManager.shared.get("userRegionName")!
-                    vm.regionNameMM = KeychainManager.shared.get("userRegionNameMM")!
-                    vm.districtId = Int(KeychainManager.shared.get("userDistrictId")!) ?? 0
-                    vm.districtName = KeychainManager.shared.get("userDistrictName")!
-                    vm.districtNameMM = KeychainManager.shared.get("userDistrictNameMM")!
-                    vm.townshipId = Int(KeychainManager.shared.get("userTownshipId")!) ?? 0
-                    vm.townshipName = KeychainManager.shared.get("userTownshipName")!
-                    vm.townshipNameMM = KeychainManager.shared.get("userTownshipNameMM")!
-                    vm.address = KeychainManager.shared.get("userAddress")!
+                    vm.name = KeychainManager.shared.get(KeychainKeys.userName)!
+                    vm.gender = KeychainManager.shared.get(KeychainKeys.userGender)!
+                    vm.dob = KeychainManager.shared.get(KeychainKeys.userDob)!
+                    vm.regionId = Int(KeychainManager.shared.get(KeychainKeys.userRegionId)!) ?? 0
+                    vm.regionName = KeychainManager.shared.get(KeychainKeys.userRegionName)!
+                    vm.regionNameMM = KeychainManager.shared.get(KeychainKeys.userRegionNameMM)!
+                    vm.districtId = Int(KeychainManager.shared.get(KeychainKeys.userDistrictId)!) ?? 0
+                    vm.districtName = KeychainManager.shared.get(KeychainKeys.userDistrictName)!
+                    vm.districtNameMM = KeychainManager.shared.get(KeychainKeys.userDistrictNameMM)!
+                    vm.townshipId = Int(KeychainManager.shared.get(KeychainKeys.userTownshipId)!) ?? 0
+                    vm.townshipName = KeychainManager.shared.get(KeychainKeys.userTownshipName)!
+                    vm.townshipNameMM = KeychainManager.shared.get(KeychainKeys.userTownshipNameMM)!
+                    vm.address = KeychainManager.shared.get(KeychainKeys.userAddress)!
                     
                     switch tagFromCommonData {
                     case "gender":
@@ -512,7 +512,9 @@ struct UpdateProfileView: View {
             if vm.showError {
                 VStack {
                     Spacer()
-                    ToastView(message: vm.errorMessage)
+                    ToastView(message: vm.errorMessage, onDismiss: {
+                        vm.showError = false
+                    })
                         .onTapGesture { vm.showError = false }
                 }
                 .animation(.easeInOut, value: vm.showError)
@@ -521,8 +523,10 @@ struct UpdateProfileView: View {
             if vm.updateSuccess {
                 VStack {
                     Spacer()
-                    ToastView(message: "Successfully Updated.")
-                        .onTapGesture { vm.showError = false }
+                    ToastView(message: "Successfully Updated.", isSuccess: true, onDismiss: {
+                        vm.updateSuccess = false
+                    })
+                        .onTapGesture { vm.updateSuccess = false }
                 }
                 .animation(.easeInOut, value: "Login Success")
             }

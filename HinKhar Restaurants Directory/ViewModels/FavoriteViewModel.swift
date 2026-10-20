@@ -45,6 +45,11 @@ class FavoriteViewModel: ObservableObject {
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             print(errorMessage)
             showError = true
@@ -71,6 +76,11 @@ class FavoriteViewModel: ObservableObject {
             
             apiSuccessForAdd = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             print("errorMessage = \(errorMessage)")
             showError = true
@@ -96,6 +106,11 @@ class FavoriteViewModel: ObservableObject {
             
             apiSuccessForAdd = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             print("errorMessage = \(errorMessage)")
             showError = true

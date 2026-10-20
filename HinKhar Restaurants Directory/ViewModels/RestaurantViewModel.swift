@@ -17,10 +17,15 @@ class RestaurantViewModel: ObservableObject {
     @Published var max_price = ""
     @Published var cuisine_type_id = ""
     @Published var searchValue = ""
+    @Published var page = 1
     @Published var isLoading = false
+    @Published var isLoadingMore = false
+    @Published var hasMoreData = true
     @Published var errorMessage = ""
     @Published var showError = false
     @Published var apiSuccess = false
+    
+    @Published var totalCount = 0
     
     @Published var restaurants: [ApiRestaurant] = []
     @Published var restaurantDetail: ApiRestaurant? = nil
@@ -39,17 +44,40 @@ class RestaurantViewModel: ObservableObject {
     
     @Published var latitude = "0.0"
     @Published var longitude = "0.0"
-    @Published var radius = "0.1"
+    @Published var radius = "1" // 1km
     @Published var nearByRestaurants: [ApiRestaurant] = []
     
     @Published var menus: [ApiMenu] = []
+    
+    @Published var apiSuccessForStats = false
+    @Published var restaurantStats: ApiRestaurantStatData? = nil
 
-    func getAllRestaurants() async {
-        isLoading = true
+    func getAllRestaurants(append: Bool = false) async {
+        if append {
+            guard hasMoreData, !isLoading, !isLoadingMore else { return }
+            isLoadingMore = true
+        } else {
+            isLoading = true
+            page = 1
+            hasMoreData = true
+            restaurants.removeAll()
+        }
+
+        defer {
+            if append {
+                isLoadingMore = false
+            } else {
+                isLoading = false
+            }
+        }
         
         print("township_id = \(township_id)")
+        print("cuisine_type_id = \(cuisine_type_id)")
         print("min_price = \(min_price)")
         print("max_price = \(max_price)")
+        print("searchValue = \(searchValue)")
+
+        let pageToRequest = page
         
         do {
             let response = try await RestaurantApiService.apiService.shared(
@@ -66,24 +94,37 @@ class RestaurantViewModel: ObservableObject {
                     "cuisine_type_id": cuisine_type_id,
                     "min_price": min_price,
                     "max_price": max_price,
-                    "search": searchValue
+                    "search": searchValue,
+                    "page": String(pageToRequest)
                     ],
                 requiresToken: true,
                 responseType: RestaurantListResponse.self
             )
 
-            print(response)
+            if append {
+                self.restaurants.append(contentsOf: response.data)
+            } else {
+                self.restaurants = response.data
+            }
+
+            if response.data.isEmpty {
+                hasMoreData = false
+            } else {
+                page += 1
+            }
             
-            self.restaurants = response.data
+//            self.totalCount = response.meta.total
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                return
+            }
+
             errorMessage = error.localizedDescription
             print(errorMessage)
             showError = true
         }
-
-        isLoading = false
     }
 
     func getRestaurantMenu(restaurantId: Int) async {
@@ -91,19 +132,23 @@ class RestaurantViewModel: ObservableObject {
         
         do {
             let response = try await RestaurantApiService.apiService.shared(
-                endpoint: "restaurants/\(restaurantId)/menus",
+                endpoint: "menus?restaurant_id=\(restaurantId)&search=\(searchValue)",
                 method: "GET",
                 responseType: RestaurantMenuListResponse.self
             )
 
-            print(response)
+            print(response.data)
+            print(response.data.count)
             
-            if response.data.count > 0 {
-                self.menus = response.data[0].menus
-            }
+            self.menus = response.data
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             print(errorMessage)
             showError = true
@@ -120,7 +165,7 @@ class RestaurantViewModel: ObservableObject {
         
         do {
             let response = try await RestaurantApiService.apiService.shared(
-                endpoint: "restaurants",
+                endpoint: "restaurants/nearby",
                 method: "GET",
                 query: [
                     "latitude": latitude,
@@ -141,6 +186,11 @@ class RestaurantViewModel: ObservableObject {
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             print(errorMessage)
             showError = true
@@ -168,6 +218,11 @@ class RestaurantViewModel: ObservableObject {
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             showError = true
         }
@@ -181,7 +236,7 @@ class RestaurantViewModel: ObservableObject {
         print("reviewableType = \(reviewableType)")
         print("rating = \(rating)")
         print("comment = \(comment)")
-        print("token = \(KeychainManager.shared.get("userToken"))")
+        print("token = \(KeychainManager.shared.get(KeychainKeys.userToken))")
         do {
             let response = try await ApiService.apiService.shared(
                 endpoint: "reviews",
@@ -197,6 +252,11 @@ class RestaurantViewModel: ObservableObject {
             
             apiSuccessForSubmitRating = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoadingForSubmitRating = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             print("errorMessage = \(errorMessage)")
             showError = true
@@ -208,7 +268,7 @@ class RestaurantViewModel: ObservableObject {
     func getRatingByUserId(reviewableId: Int) async {
 //        isLoading = true
         
-        if let userIdString = KeychainManager.shared.get("userId"), let parsedId = Int(userIdString) {
+        if let userIdString = KeychainManager.shared.get(KeychainKeys.userId), let parsedId = Int(userIdString) {
             userId = parsedId
         } else {
             errorMessage = String(localized: "error.missingUserId")
@@ -242,12 +302,44 @@ class RestaurantViewModel: ObservableObject {
             
             apiSuccess = true
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             print(errorMessage)
             showError = true
         }
 
         isLoading = false
+    }
+    
+    func getRestaurantStats() async {
+        
+        do {
+            let response = try await RestaurantApiService.apiService.shared(
+                endpoint: "restaurants/stats",
+                method: "GET",
+                requiresToken: true,
+                responseType: ApiRestaurantStat.self
+            )
+
+            print(response)
+            
+            self.restaurantStats = response.data
+            
+            apiSuccessForStats = true
+        } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
+            errorMessage = error.localizedDescription
+            print(errorMessage)
+            showError = true
+        }
     }
     
 //    @MainActor

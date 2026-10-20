@@ -9,10 +9,10 @@ import Combine
 
 @MainActor
 class ResetPasswordViewModel: ObservableObject {
-    @Published var identifier = "09123456789"
-    @Published var newPassword = "password"
-    @Published var confirmPassword = "password"
-    @Published var otp = ""
+    @Published var identifier = ""
+    @Published var resetToken = ""
+    @Published var newPassword = ""
+    @Published var confirmPassword = ""
     @Published var isLoading = false
     @Published var errorMessage = ""
     @Published var showError = false
@@ -27,14 +27,20 @@ class ResetPasswordViewModel: ObservableObject {
             let response = try await ApiService.apiService.shared(
                 endpoint: "auth/reset-password",
                 method: "POST",
-                body: ResetPasswordRequest(identifier: identifier, otp: otp, password: newPassword, password_confirmation: confirmPassword),
+                body: ResetPasswordRequest(identifier: identifier, reset_token: resetToken, password: newPassword, password_confirmation: confirmPassword),
                 responseType: ResetPasswordResponse.self
             )
             successMessage = response.message
             print("message = \(successMessage)")
-            
-            apiSuccess = true
+            if (successMessage == "Password reset successfully") {
+                apiSuccess = true
+            }
         } catch {
+            if NetworkRequestGuard.handleOfflineError(error) {
+                isLoading = false
+                return
+            }
+
             errorMessage = error.localizedDescription
             print("errorMessage = \(errorMessage)")
             showError = true

@@ -25,15 +25,15 @@ struct ResetPasswordView: View {
     @StateObject var vm = ResetPasswordViewModel()
     
     let identifier: String
-    let otp: String
+    let resetToken: String
     
     init(
         identifier: String = "",
-        otp: String = "",
+        resetToken: String = "",
         )
     {
         self.identifier = identifier
-        self.otp = otp
+        self.resetToken = resetToken
     }
     
     var body: some View {
@@ -180,7 +180,11 @@ struct ResetPasswordView: View {
                     }
 
                     // All good: call reset password API
-                    Task { await vm.resetPassword() }
+                    Task {
+                        vm.identifier = identifier
+                        vm.resetToken = resetToken
+                        await vm.resetPassword()
+                    }
                 } label: {
                     Text("forgot.button.confirm")
                         .font(.custom("Futura-Medium", size: 18.0))
@@ -229,7 +233,6 @@ struct ResetPasswordView: View {
             }
             .onAppear {
                 vm.identifier = identifier
-                vm.otp = otp
             }
             
             if vm.isLoading {
@@ -242,7 +245,9 @@ struct ResetPasswordView: View {
             if vm.showError {
                 VStack {
                     Spacer()
-                    ToastView(message: vm.errorMessage)
+                    ToastView(message: vm.errorMessage, onDismiss: {
+                        vm.showError = false
+                    })
                         .onTapGesture { vm.showError = false }
                 }
                 .animation(.easeInOut, value: vm.showError)
@@ -282,6 +287,6 @@ private struct TitleBar: View {
 #Preview {
     ResetPasswordView(
         identifier: "",
-        otp: ""
+        resetToken: ""
     )
 }

@@ -7,7 +7,8 @@
 import Foundation
 
 struct RestaurantMenuListResponse: Codable {
-    let data: [MenuCategory]
+//    let data: [MenuCategory]
+    let data: [ApiMenu]
 }
 
 struct MenuCategory: Codable {
@@ -21,6 +22,7 @@ struct ApiMenu: Codable {
     let name: String?
     let name_mm: String?
     let price: String?
+    let description: String?
     let is_available: Int?
     let is_signature: Int?
 }

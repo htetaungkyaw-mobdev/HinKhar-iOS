@@ -21,7 +21,7 @@ struct CommonLoading: View {
             }
             .frame(width: 170, height: 170)
 //                        .background(.ultraThinMaterial)
-            .background(.white)
+            .background(Color("SecondaryColor"))
             .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
             .shadow(color: .black.opacity(0.15), radius: 12, x: 0, y: 6)
             .accessibilityElement(children: .combine)

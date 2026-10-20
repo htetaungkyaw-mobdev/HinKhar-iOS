@@ -15,7 +15,7 @@ struct FullscreenImageView: View {
         GeometryReader { proxy in
             Image(imageName)
                 .resizable()
-                .scaledToFill()
+//                .scaledToFill()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .clipped()
                 .ignoresSafeArea()
@@ -117,7 +117,7 @@ struct WelcomeScreensView: View {
     
     func goToLogin() {
         isIntroduction = false
-        KeychainManager.shared.save("yes", forKey: "isShowedWelcome")
+        KeychainManager.shared.save("yes", forKey: KeychainKeys.isShowedWelcome)
     }
 }
 

@@ -21,9 +21,13 @@ struct EnterPhoneNumberView: View {
     @State private var enterPhone = false
     @State private var showAlert = false
     
+    @State private var expiredTime = 0
+    
     @State private var navigateToLogin = false
     @State private var navigateToVerifyOTP = false
     @State private var navigateToRegister = false
+    
+    @StateObject var register_vm = RegisterViewModel()
     
     var body: some View {
         NavigationStack {
@@ -102,8 +106,19 @@ struct EnterPhoneNumberView: View {
 
                         // Continue button
                         Button {
-                            if enterPhone {
-                                navigateToRegister = true
+                            if !phone.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                
+                                Task {
+                                    register_vm.phoneOrEmail = phone
+                                    await register_vm.sendOtp()
+                                    
+                                    if register_vm.apiSuccess {
+                                        expiredTime = register_vm.expiredTime
+                                        navigateToVerifyOTP = true
+                                    }
+                                }
+                                
+                
                             } else {
                                 showAlert = true
                             }
@@ -122,10 +137,10 @@ struct EnterPhoneNumberView: View {
                                 .stroke(Color("PrimaryColor"), lineWidth: 2)
                         )
                         .padding(.top, 30)
-                      .alert("Enter phone number", isPresented: $showAlert) {
+                      .alert("register.alert.phone.title", isPresented: $showAlert) {
                         Button("OK", role: .cancel) { }
                     } message: {
-                        Text("Please enter your phone number to continue.")
+                        Text("register.alert.phone")
                     }
                     }
                 }
@@ -177,10 +192,10 @@ struct EnterPhoneNumberView: View {
                 LoginView()
                     .navigationBarBackButtonHidden(true)
             }
-            .navigationDestination(isPresented: $navigateToRegister) {
-//                VerifyOTPCodeView(type: "phone", value: phone)
-//                    .navigationBarBackButtonHidden(true)
-                RegisterView().navigationBarBackButtonHidden(true)
+            .navigationDestination(isPresented: $navigateToVerifyOTP) {
+                VerifyOTPCodeView(type: "phone", value: phone, expiredTime: expiredTime, comeFrom: "registration")
+                    .navigationBarBackButtonHidden(true)
+//                RegisterView(phoneOrEmail: phone).navigationBarBackButtonHidden(true)
             }
             
         }

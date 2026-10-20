@@ -79,7 +79,7 @@ struct RestaurantRowNearBy: View {
                             
                             Spacer()
                             
-                            Image(restaurant.isFavorited ?? false ? "FavoriteSelected" :"FavoriteSelected")
+                            Image(restaurant.isFavorited ?? false ? "FavoriteSelected" :"FavoriteUnselected")
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width: 20, height: 20)

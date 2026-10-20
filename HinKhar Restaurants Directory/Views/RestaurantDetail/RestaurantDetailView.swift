@@ -27,7 +27,9 @@ struct RestaurantDetailView: View {
     @State private var showRatingDialog: Bool = false
     @State private var selectedRating: Int = 0
     @State private var isFavorite: Bool = false
+    @State private var favoriteId: Int = 0
     @State private var showFavoriteConfirm: Bool = false
+    @State private var showSubmitRatingSuccess: Bool = false
     @State private var navigateToMenu: Bool = false
     
     @Environment(\.openURL) private var openURLAction
@@ -38,10 +40,18 @@ struct RestaurantDetailView: View {
     @State private var restaurantId: Int
     @State private var comeFrom: String
     
+    private var description: String {
+        guard let desc = vm.restaurantDetail?.description else { return "" }
+        return desc
+    }
+    
     private var promotionValue: String {
         guard let promotionLists = vm.restaurantDetail?.promotionLists else { return "" }
         if !promotionLists.isEmpty {
-            return promotionLists[0].discount_value ?? ""
+            return PromotionUtils.definePromotionTextToShow(
+                discountType: promotionLists[0].discount_type ?? "",
+                discountValue: promotionLists[0].discount_value ?? ""
+            )
         }
         else {
             return ""
@@ -85,6 +95,19 @@ struct RestaurantDetailView: View {
     
     @StateObject var vm = RestaurantViewModel()
     @StateObject var favorite_vm = FavoriteViewModel()
+
+    private var mapCoordinate: CLLocationCoordinate2D? {
+        guard
+            let latString = vm.restaurantDetail?.latitude,
+            let lonString = vm.restaurantDetail?.longitude,
+            let lat = Double(latString),
+            let lon = Double(lonString)
+        else {
+            return nil
+        }
+
+        return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+    }
     
     // Helper to resolve a social link by channel using switch
     private func link(for channel: String) -> String? {
@@ -177,20 +200,29 @@ struct RestaurantDetailView: View {
             let close = convert(o.closingTime)
 
             if rawDay == "all" {
-                let daysEN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-                let daysMM = ["တင်္နလာ", "အင်္ဂါ", "ဗုဒ္ဒဟူး", "ကြာသပတေး", "သောကြာ", "စနေ", "တနင်္ဂနွေ"]
-                let days = (selectedLanguageCode == "my") ? daysMM : daysEN
-
-                for day in days {
-                    result.append(
-                        OpeningHour(
-                            id: UUID().uuidString,
-                            openingDay: day,
-                            openingTime: open,
-                            closingTime: close
-                        )
+//                let daysEN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+//                let daysMM = ["တင်္နလာ", "အင်္ဂါ", "ဗုဒ္ဒဟူး", "ကြာသပတေး", "သောကြာ", "စနေ", "တနင်္ဂနွေ"]
+//                let days = (selectedLanguageCode == "my") ? daysMM : daysEN
+//
+//                for day in days {
+//                    result.append(
+//                        OpeningHour(
+//                            id: UUID().uuidString,
+//                            openingDay: day,
+//                            openingTime: open,
+//                            closingTime: close
+//                        )
+//                    )
+//                }
+                let day = (selectedLanguageCode == "my") ? "နေ့စဉ်" : "Everyday"
+                result.append(
+                    OpeningHour(
+                        id: UUID().uuidString,
+                        openingDay: day,
+                        openingTime: open,
+                        closingTime: close
                     )
-                }
+                )
             } else {
                 var openingDay = o.openingDay?.capitalized ?? ""
                 if selectedLanguageCode == "my" {
@@ -269,6 +301,7 @@ struct RestaurantDetailView: View {
         }
 
         let candidates = displayOpeningHours.filter { todayNames.contains($0.openingDay ?? "") }
+        print("candidates = \(candidates)")
 
         // If there are multiple time ranges for today, open if any range matches
         let now = Date()
@@ -279,6 +312,16 @@ struct RestaurantDetailView: View {
                 if isTime(now, between: open, and: close) { return true }
             }
         }
+        
+        if (candidates.isEmpty) {
+            // this is for everyday
+            let open = displayOpeningHours[0].openingTime ?? ""
+            let close = displayOpeningHours[0].closingTime ?? ""
+            if !open.isEmpty && !close.isEmpty {
+                if isTime(now, between: open, and: close) { return true }
+            }
+        }
+        
         return false
     }
     
@@ -313,8 +356,8 @@ struct RestaurantDetailView: View {
     
     @State private var position = MapCameraPosition.region(
         MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 13.7563, longitude: 100.5018),
-            span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+            center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
+            span: MKCoordinateSpan(latitudeDelta: 0.001, longitudeDelta: 0.001)
         )
     )
     
@@ -331,7 +374,7 @@ struct RestaurantDetailView: View {
                         //                            .padding(.bottom, -8)
                         let screenWidth = UIScreen.main.bounds.width
                         
-                        RemoteFillImage(url: URL(string: vm.restaurantDetail?.name ?? ""), height: 300, placeholderImageName: "DefaultRestaurantImage")
+                        RemoteFillImage(url: URL(string: vm.restaurantDetail?.restaurantImageURL ?? ""), height: 300, placeholderImageName: "DefaultRestaurantImage")
                             .frame(maxWidth: screenWidth)
                         
                         // Name & Rating
@@ -341,11 +384,11 @@ struct RestaurantDetailView: View {
                                     HStack(alignment: .top) {
                                         VStack {
                                             VStack(spacing: 8) {
-                                                Text(vm.restaurantDetail?.name ?? "")
+                                                Text((selectedLanguageCode == "my" ? vm.restaurantDetail?.nameMM : vm.restaurantDetail?.name) ?? "")
                                                     .font(.custom("Futura-Medium", size: 18.0))
                                                     .frame(maxWidth: .infinity, alignment: .leading)
                                                     .padding(.top, 8)
-                                                Text(displayCuisineTypes.map { $0.name }.joined(separator: ", "))
+                                                Text(displayCuisineTypes.map { selectedLanguageCode == "my" ? $0.nameMM : $0.name }.joined(separator: ", "))
                                                     .font(.custom("Futura-Medium", size: 12.0))
                                                     .frame(maxWidth: .infinity, alignment: .leading)
                                             }
@@ -372,7 +415,7 @@ struct RestaurantDetailView: View {
                                                 
                                                 
                                                 Button {
-                                                    selectedRating = max(1, Int(round(vm.restaurantDetail?.overallRating ?? 0)))
+//                                                    selectedRating = max(1, Int(round(vm.restaurantDetail?.overallRating ?? 0)))
                                                     showRatingDialog = true
                                                 } label: {
                                                     Text("Rate")
@@ -423,13 +466,34 @@ struct RestaurantDetailView: View {
                                 )
                                 .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
                                 
+                                // Description
+                                if !description.isEmpty {
+                                    Text("detail.about")
+                                        .font(.custom("Futura-Medium", size: 16.0))
+                                        .foregroundColor(Color("PrimaryColor"))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.top, 8)
+                                        .padding(.leading, 24)
+                                    
+                                    Text(description)
+                                        .font(.custom("Futura-Medium", size: 16.0))
+                                        .foregroundColor(.black)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.top, 8)
+                                        .padding(.bottom, 8)
+                                        .padding(.leading, 24)
+                                        .padding(.trailing, 24)
+                                }
+                                
                                 //Promotion
                                 if !promotionValue.isEmpty {
                                     VStack {
-                                        Text("To get \(promotionValue) promotion, please use this coupon code \(couponCode) when you visit our restaurant")
-                                            .font(.custom("Futura-Medium", size: 14.0))
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            .padding(.top, 8)
+                                        if !couponCode.isEmpty {
+                                            Text("To get \(promotionValue) promotion, please use this coupon code \(couponCode) when you visit our restaurant")
+                                                .font(.custom("Futura-Medium", size: 14.0))
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                                .padding(.top, 8)
+                                        }
                                         
                                         if !promotionText.isEmpty {
                                             Text("detail.promotion.info")
@@ -454,7 +518,7 @@ struct RestaurantDetailView: View {
                                     // Contact
                                     Text("detail.contact")
                                         .font(.custom("Futura-Medium", size: 16.0))
-                                        .foregroundColor(.black.opacity(0.7))
+                                        .foregroundColor(Color("PrimaryColor"))
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(.top, 8)
                                         .padding(.leading, 24)
@@ -483,223 +547,226 @@ struct RestaurantDetailView: View {
                                     //                                    }
                                 }
                                 
-                                // Social Links (resolved via switch in populateSocialLinks)
-                                HStack(spacing: 16) {
-                                    // Facebook
-                                    if !facebookLink.isEmpty {
-                                        Button(action: {
-                                            print("facebookLink:", facebookLink)
-                                            // Open facebookLink in Safari (more robust)
-                                            let raw = facebookLink.trimmingCharacters(in: .whitespacesAndNewlines)
-                                            guard !raw.isEmpty else { return }
-                                            
-                                            func webURLString(from raw: String) -> String {
-                                                let lower = raw.lowercased()
+                                if vm.restaurantDetail?.badge != "Free" {
+                                    // Social Links (resolved via switch in populateSocialLinks)
+                                    HStack(spacing: 16) {
+                                        // Facebook
+                                        if !facebookLink.isEmpty {
+                                            Button(action: {
+                                                print("facebookLink:", facebookLink)
+                                                // Open facebookLink in Safari (more robust)
+                                                let raw = facebookLink.trimmingCharacters(in: .whitespacesAndNewlines)
+                                                guard !raw.isEmpty else { return }
                                                 
-                                                if lower.hasPrefix("http://") || lower.hasPrefix("https://") {
-                                                    return raw
-                                                }
-                                                
-                                                if lower.hasPrefix("fb://") {
-                                                    // Try to convert some common fb:// forms to web equivalents
-                                                    // fb://profile/123 -> https://www.facebook.com/profile.php?id=123
-                                                    // fb://page/123 -> https://www.facebook.com/123
-                                                    let remainder = raw.dropFirst("fb://".count)
+                                                func webURLString(from raw: String) -> String {
+                                                    let lower = raw.lowercased()
                                                     
-                                                    if remainder.hasPrefix("profile/") {
-                                                        let id = remainder.dropFirst("profile/".count)
-                                                        return "https://www.facebook.com/profile.php?id=\(id)"
-                                                    } else if remainder.hasPrefix("page/") {
-                                                        let id = remainder.dropFirst("page/".count)
-                                                        return "https://www.facebook.com/\(id)"
-                                                    } else {
-                                                        // Fallback: just append after www.facebook.com/
-                                                        return "https://www.facebook.com/\(remainder)"
+                                                    if lower.hasPrefix("http://") || lower.hasPrefix("https://") {
+                                                        return raw
                                                     }
+                                                    
+                                                    if lower.hasPrefix("fb://") {
+                                                        // Try to convert some common fb:// forms to web equivalents
+                                                        // fb://profile/123 -> https://www.facebook.com/profile.php?id=123
+                                                        // fb://page/123 -> https://www.facebook.com/123
+                                                        let remainder = raw.dropFirst("fb://".count)
+                                                        
+                                                        if remainder.hasPrefix("profile/") {
+                                                            let id = remainder.dropFirst("profile/".count)
+                                                            return "https://www.facebook.com/profile.php?id=\(id)"
+                                                        } else if remainder.hasPrefix("page/") {
+                                                            let id = remainder.dropFirst("page/".count)
+                                                            return "https://www.facebook.com/\(id)"
+                                                        } else {
+                                                            // Fallback: just append after www.facebook.com/
+                                                            return "https://www.facebook.com/\(remainder)"
+                                                        }
+                                                    }
+                                                    
+                                                    // If it looks like a domain or path, prepend https://
+                                                    return "https://\(raw)"
                                                 }
                                                 
-                                                // If it looks like a domain or path, prepend https://
-                                                return "https://\(raw)"
-                                            }
-                                            
-                                            let candidate = webURLString(from: raw)
-                                            
-                                            // Percent-encode if needed (only path/query parts)
-                                            let encoded: String = {
-                                                if let url = URL(string: candidate), !url.absoluteString.isEmpty {
-                                                    return candidate
-                                                } else if var components = URLComponents(string: candidate) {
-                                                    // If path contains spaces etc.
-                                                    components.path = components.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? components.path
-                                                    components.percentEncodedQuery = components.query // keep as-is
-                                                    return components.string ?? candidate
-                                                } else {
-                                                    return candidate.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? candidate
-                                                }
-                                            }()
-                                            
-                                            if let url = URL(string: encoded) {
-                                                print("Opening URL:", url.absoluteString)
-                                                openURLAction(url)
-                                            } else {
-                                                print("Invalid URL:", encoded)
-                                            }
-                                        }) {
-                                            Image("Facebook")
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: 30, height: 30)
-                                                .contentShape(Rectangle())
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                    
-                                    // Tiktok
-                                    if !tiktokLink.isEmpty {
-                                        Button(action: {
-                                            let raw = tiktokLink.trimmingCharacters(in: .whitespacesAndNewlines)
-                                            guard !raw.isEmpty else { return }
-                                            
-                                            func tiktokURLString(from raw: String) -> String {
-                                                let lower = raw.lowercased()
-                                                if lower.hasPrefix("http://") || lower.hasPrefix("https://") || lower.hasPrefix("tiktok://") {
-                                                    return raw
-                                                }
-                                                // Assume it's a handle or path
-                                                return "https://www.tiktok.com/\(raw)"
-                                            }
-                                            
-                                            let candidate = tiktokURLString(from: raw)
-                                            let encoded: String = {
-                                                if let url = URL(string: candidate), !url.absoluteString.isEmpty {
-                                                    return candidate
-                                                } else if var components = URLComponents(string: candidate) {
-                                                    components.path = components.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? components.path
-                                                    components.percentEncodedQuery = components.query
-                                                    return components.string ?? candidate
-                                                } else {
-                                                    return candidate.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? candidate
-                                                }
-                                            }()
-                                            
-                                            if let url = URL(string: encoded) {
-                                                print("Opening URL:", url.absoluteString)
-                                                openURLAction(url)
-                                            }
-                                        }) {
-                                            Image("Tiktok")
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: 30, height: 30)
-                                                .contentShape(Rectangle())
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                    
-                                    // Viber
-                                    if !viberNo.isEmpty {
-                                        Button(action: {
-                                            // Note: To open viber:// URLs, ensure LSApplicationQueriesSchemes includes "viber" in Info.plist.
-                                            let raw = viberNo.trimmingCharacters(in: .whitespacesAndNewlines)
-                                            guard !raw.isEmpty else { return }
-                                            
-                                            // Normalize phone: keep leading '+' and digits
-                                            let normalized: String = {
-                                                var result = ""
-                                                for (i, ch) in raw.enumerated() {
-                                                    if ch.isNumber { result.append(ch) }
-                                                    else if ch == "+", i == 0 { result.append(ch) }
-                                                }
-                                                return result
-                                            }()
-                                            
-                                            let appURLString = "viber://chat?number=\(normalized)"
-                                            let fallbackURLString = "https://invite.viber.com/?g2=\(normalized)"
-                                            
-                                            let tryOpen: (String) -> Bool = { s in
-                                                if let url = URL(string: s) {
-                                                    if UIApplication.shared.canOpenURL(url) {
-                                                        openURLAction(url)
-                                                        return true
+                                                let candidate = webURLString(from: raw)
+                                                
+                                                // Percent-encode if needed (only path/query parts)
+                                                let encoded: String = {
+                                                    if let url = URL(string: candidate), !url.absoluteString.isEmpty {
+                                                        return candidate
+                                                    } else if var components = URLComponents(string: candidate) {
+                                                        // If path contains spaces etc.
+                                                        components.path = components.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? components.path
+                                                        components.percentEncodedQuery = components.query // keep as-is
+                                                        return components.string ?? candidate
+                                                    } else {
+                                                        return candidate.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? candidate
                                                     }
-                                                    else {
-                                                        print("Viber is not installed")
-                                                    }
-                                                }
-                                                return false
-                                            }
-                                            
-                                            if !tryOpen(appURLString) {
-                                                _ = tryOpen(fallbackURLString)
-                                            }
-                                        }) {
-                                            Image("Viber")
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: 30, height: 30)
-                                                .contentShape(Rectangle())
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                    
-                                    // Wechat
-                                    if !wechatLink.isEmpty {
-                                        Button(action: {
-                                            let raw = wechatLink.trimmingCharacters(in: .whitespacesAndNewlines)
-                                            guard !raw.isEmpty else { return }
-                                            
-                                            func wechatURLString(from raw: String) -> String {
-                                                let lower = raw.lowercased()
-                                                if lower.hasPrefix("http://") || lower.hasPrefix("https://") || lower.hasPrefix("weixin://") || lower.hasPrefix("wechat://") {
-                                                    return raw
-                                                }
-                                                // Assume it's a path or id; use WeChat global site as base
-                                                return "https://weixin.qq.com/\(raw)"
-                                            }
-                                            
-                                            let candidate = wechatURLString(from: raw)
-                                            let encoded: String = {
-                                                if let url = URL(string: candidate), !url.absoluteString.isEmpty {
-                                                    return candidate
-                                                } else if var components = URLComponents(string: candidate) {
-                                                    components.path = components.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? components.path
-                                                    components.percentEncodedQuery = components.query
-                                                    return components.string ?? candidate
+                                                }()
+                                                
+                                                if let url = URL(string: encoded) {
+                                                    print("Opening URL:", url.absoluteString)
+                                                    openURLAction(url)
                                                 } else {
-                                                    return candidate.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? candidate
+                                                    print("Invalid URL:", encoded)
                                                 }
-                                            }()
-                                            
-                                            if let url = URL(string: encoded) {
-                                                print("Opening URL:", url.absoluteString)
-                                                openURLAction(url)
+                                            }) {
+                                                Image("Facebook")
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 30, height: 30)
+                                                    .contentShape(Rectangle())
                                             }
-                                        }) {
-                                            Image("Wechat")
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: 30, height: 30)
-                                                .contentShape(Rectangle())
+                                            .buttonStyle(.plain)
                                         }
-                                        .buttonStyle(.plain)
+                                        
+                                        // Tiktok
+                                        if !tiktokLink.isEmpty {
+                                            Button(action: {
+                                                let raw = tiktokLink.trimmingCharacters(in: .whitespacesAndNewlines)
+                                                guard !raw.isEmpty else { return }
+                                                
+                                                func tiktokURLString(from raw: String) -> String {
+                                                    let lower = raw.lowercased()
+                                                    if lower.hasPrefix("http://") || lower.hasPrefix("https://") || lower.hasPrefix("tiktok://") {
+                                                        return raw
+                                                    }
+                                                    // Assume it's a handle or path
+                                                    return "https://www.tiktok.com/\(raw)"
+                                                }
+                                                
+                                                let candidate = tiktokURLString(from: raw)
+                                                let encoded: String = {
+                                                    if let url = URL(string: candidate), !url.absoluteString.isEmpty {
+                                                        return candidate
+                                                    } else if var components = URLComponents(string: candidate) {
+                                                        components.path = components.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? components.path
+                                                        components.percentEncodedQuery = components.query
+                                                        return components.string ?? candidate
+                                                    } else {
+                                                        return candidate.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? candidate
+                                                    }
+                                                }()
+                                                
+                                                if let url = URL(string: encoded) {
+                                                    print("Opening URL:", url.absoluteString)
+                                                    openURLAction(url)
+                                                }
+                                            }) {
+                                                Image("Tiktok")
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 30, height: 30)
+                                                    .contentShape(Rectangle())
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                        
+                                        // Viber
+                                        if !viberNo.isEmpty {
+                                            Button(action: {
+                                                // Note: To open viber:// URLs, ensure LSApplicationQueriesSchemes includes "viber" in Info.plist.
+                                                let raw = viberNo.trimmingCharacters(in: .whitespacesAndNewlines)
+                                                guard !raw.isEmpty else { return }
+                                                
+                                                // Normalize phone: keep leading '+' and digits
+                                                let normalized: String = {
+                                                    var result = ""
+                                                    for (i, ch) in raw.enumerated() {
+                                                        if ch.isNumber { result.append(ch) }
+                                                        else if ch == "+", i == 0 { result.append(ch) }
+                                                    }
+                                                    return result
+                                                }()
+                                                
+                                                let appURLString = "viber://chat?number=\(normalized)"
+                                                let fallbackURLString = "https://invite.viber.com/?g2=\(normalized)"
+                                                
+                                                let tryOpen: (String) -> Bool = { s in
+                                                    if let url = URL(string: s) {
+                                                        if UIApplication.shared.canOpenURL(url) {
+                                                            openURLAction(url)
+                                                            return true
+                                                        }
+                                                        else {
+                                                            print("Viber is not installed")
+                                                        }
+                                                    }
+                                                    return false
+                                                }
+                                                
+                                                if !tryOpen(appURLString) {
+                                                    _ = tryOpen(fallbackURLString)
+                                                }
+                                            }) {
+                                                Image("Viber")
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 30, height: 30)
+                                                    .contentShape(Rectangle())
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                        
+                                        // Wechat
+                                        if !wechatLink.isEmpty {
+                                            Button(action: {
+                                                let raw = wechatLink.trimmingCharacters(in: .whitespacesAndNewlines)
+                                                guard !raw.isEmpty else { return }
+                                                
+                                                func wechatURLString(from raw: String) -> String {
+                                                    let lower = raw.lowercased()
+                                                    if lower.hasPrefix("http://") || lower.hasPrefix("https://") || lower.hasPrefix("weixin://") || lower.hasPrefix("wechat://") {
+                                                        return raw
+                                                    }
+                                                    // Assume it's a path or id; use WeChat global site as base
+                                                    return "https://weixin.qq.com/\(raw)"
+                                                }
+                                                
+                                                let candidate = wechatURLString(from: raw)
+                                                let encoded: String = {
+                                                    if let url = URL(string: candidate), !url.absoluteString.isEmpty {
+                                                        return candidate
+                                                    } else if var components = URLComponents(string: candidate) {
+                                                        components.path = components.path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? components.path
+                                                        components.percentEncodedQuery = components.query
+                                                        return components.string ?? candidate
+                                                    } else {
+                                                        return candidate.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? candidate
+                                                    }
+                                                }()
+                                                
+                                                if let url = URL(string: encoded) {
+                                                    print("Opening URL:", url.absoluteString)
+                                                    openURLAction(url)
+                                                }
+                                            }) {
+                                                Image("Wechat")
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: 30, height: 30)
+                                                    .contentShape(Rectangle())
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
                                     }
-                                }
-                                .contentShape(Rectangle())
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.top, 4)
-                                .padding(.leading, 24)
-                                
-                                // About
-                                Text("detail.about")
-                                    .font(.custom("Futura-Medium", size: 18.0))
+                                    .contentShape(Rectangle())
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.top, 16)
+                                    .padding(.top, 4)
                                     .padding(.leading, 24)
+
+                                }
+                                                                
+                                // About
+//                                Text("detail.about")
+//                                    .font(.custom("Futura-Medium", size: 18.0))
+//                                    .frame(maxWidth: .infinity, alignment: .leading)
+//                                    .padding(.top, 16)
+//                                    .padding(.leading, 24)
                                 
                                 if !displayOpeningHours.isEmpty {
                                     Text("detail.openingHours")
                                         .font(.custom("Futura-Medium", size: 16.0))
-                                        .foregroundColor(.black.opacity(0.7))
+                                        .foregroundColor(Color("PrimaryColor"))
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(.top, 8)
                                         .padding(.leading, 24)
@@ -732,14 +799,21 @@ struct RestaurantDetailView: View {
                                                         }
                                                     }
                                                 }
-                                            } else {
+                                            }
+                                            else {
                                                 Text("No opening hours available")
                                                     .foregroundStyle(.secondary)
                                                     .padding(.horizontal, 24)
                                             }
+                                            
+                                            if displayOpeningHours.count == 1 {
+                                                Text("") // for the height of open / close icon
+                                                
+                                                Text("")
+                                            }
                                         }
                                         
-                                        Image(isOpenNow ? "ShopOpened" : "ShopClosed")
+                                        Image(isOpenNow && todaysClosingDay == nil ? "ShopOpened" : "ShopClosed")
                                             .resizable()
                                             .scaledToFill()
                                             .frame(width: 70, height: 40)
@@ -749,7 +823,7 @@ struct RestaurantDetailView: View {
                                 
                                 // Closing Reason (only if today matches a manual closing day)
                                 if let closing = todaysClosingDay {
-                                    Text(closing.closingInfo.isEmpty ? "" : "Our restaurant is closed today for \(closing.closingInfo).")
+                                    Text(closing.closingInfo.isEmpty ? "" : closing.closingInfo)
                                         .font(.custom("Futura-Medium", size: 14.0))
                                         .foregroundStyle(Color("PrimaryColor"))
                                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -766,7 +840,7 @@ struct RestaurantDetailView: View {
                                 if let address = vm.restaurantDetail?.address?.trimmingCharacters(in: .whitespacesAndNewlines), !address.isEmpty {
                                     Text("detail.address")
                                         .font(.custom("Futura-Medium", size: 16.0))
-                                        .foregroundColor(.black.opacity(0.7))
+                                        .foregroundColor(Color("PrimaryColor"))
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(.leading, 24)
                                     
@@ -779,7 +853,26 @@ struct RestaurantDetailView: View {
                                         .padding(.leading, 24)
                                 }
                                 
-                                Map(position: $position)
+                                Map(position: $position) {
+                                    if let coordinate = mapCoordinate {
+                                        Annotation((selectedLanguageCode == "my" ? vm.restaurantDetail?.nameMM : vm.restaurantDetail?.name) ?? "", coordinate: coordinate) {
+                                            Image("Location")
+                                                .renderingMode(.template)
+                                                .foregroundStyle(Color("PrimaryColor"))
+                                                .onTapGesture {
+                                                    let restaurantName = (selectedLanguageCode == "my" ? vm.restaurantDetail?.nameMM : vm.restaurantDetail?.name) ?? ""
+                                                    let placemark = MKPlacemark(coordinate: coordinate)
+                                                    let mapItem = MKMapItem(placemark: placemark)
+                                                    mapItem.name = restaurantName
+                                                    let zoomSpan = MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+                                                    mapItem.openInMaps(launchOptions: [
+                                                        MKLaunchOptionsMapCenterKey: NSValue(mkCoordinate: coordinate),
+                                                        MKLaunchOptionsMapSpanKey: NSValue(mkCoordinateSpan: zoomSpan)
+                                                    ])
+                                                }
+                                        }
+                                    }
+                                }
                                     .frame(maxWidth: .infinity, minHeight: 200, maxHeight: 200)
                                     .padding(.top, 8)
                                     .padding(.leading, 12)
@@ -820,17 +913,21 @@ struct RestaurantDetailView: View {
                             .ignoresSafeArea()
                             .onTapGesture { showRatingDialog = false }
                         
-                        RatingDialog(title: "Please rate \(vm.restaurantDetail?.name ?? "")",
+                        RatingDialog(title: "rating.title",
+                                     ratingFromApi: vm.ratingFromApi,
                                      selectedRating: vm.ratingFromApi != 0 ? $vm.ratingFromApi : $selectedRating,
                                      onCancel: { showRatingDialog = false },
                                      onSubmit: {
                             print("selectedRating = \(selectedRating)")
                             print("restaurantId = \(initialRestaurantId)")
+                            let parentId = vm.restaurantDetail?.parent_id ?? 0
+                            print("parent_id = \(parentId)")
                             vm.reviewableId = initialRestaurantId
+//                            vm.reviewableType = parentId == 0 ? "App\\Models\\Restaurant" : "App\\Models\\Branch"
                             vm.reviewableType = "App\\Models\\Restaurant"
                             vm.rating = selectedRating
                             vm.comment = "Submit Rating"
-                            Task { await vm.submitRating()}
+                            Task { await vm.submitRating() }
                             //                            if vm.errorMessage.isEmpty {
                             //                                showRatingDialog = false
                             //                            }
@@ -870,6 +967,18 @@ struct RestaurantDetailView: View {
                     .allowsHitTesting(true)
                 }
                 
+                if showSubmitRatingSuccess {
+                    VStack {
+                        Spacer()
+                        ToastView(message: "rating.thanks", isSuccess: true, onDismiss: {
+                            showSubmitRatingSuccess = false
+                        })
+                            .onTapGesture { showSubmitRatingSuccess = false }
+                            .padding(.bottom, 48)
+                    }
+                    .animation(.easeInOut, value: showSubmitRatingSuccess)
+                }
+                
                 VStack {
                     HStack {
                         Image("DetailBack")
@@ -896,7 +1005,7 @@ struct RestaurantDetailView: View {
                         if !promotionValue.isEmpty {
                             HStack {
                                 Text(promotionValue)
-                                    .font(.system(size: 12, weight: .bold, design: .default))
+                                    .font(.custom("Futura-Medium", size: 12.0))
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 8)
                                     .background(Color("PrimaryColor"))
@@ -925,7 +1034,7 @@ struct RestaurantDetailView: View {
                             
                             if isFavorite {
                                 Button("Remove", role: .destructive) {
-                                    favorite_vm.favoriteableId = restaurantId
+                                    favorite_vm.favoriteableId = favoriteId
                                     Task {
                                         await favorite_vm.removeFavorite()
                                         withAnimation(.easeInOut) {
@@ -988,21 +1097,28 @@ struct RestaurantDetailView: View {
             .navigationDestination(isPresented: $navigateToMenu) {
                 RestaurantMenuView(
                     restaurantId: restaurantId,
-                    restaurantName: vm.restaurantDetail?.name ?? "")
+                    restaurantName: (selectedLanguageCode == "my" ? vm.restaurantDetail?.nameMM : vm.restaurantDetail?.name) ?? "",
+                    comeFrom: comeFrom)
                     .navigationBarBackButtonHidden(true)
             }
             .task {
                 await vm.getRestaurantById(id: initialRestaurantId)
                 
-//                if auth.isAuthenticated {
-//                    await favorite_vm.getAllFavorites()
-//                    
-//                    isFavorite = favorite_vm.favorites.contains {
-//                        $0.favoritable.id == restaurantId
-//                    }
-//                    
-//                    await vm.getRatingByUserId(reviewableId: restaurantId)
-//                }
+                if auth.isAuthenticated {
+                    await favorite_vm.getAllFavorites()
+                    
+                    isFavorite = favorite_vm.favorites.contains {
+                        $0.favoritable.id == restaurantId
+                    }
+                    
+                    let favorite = favorite_vm.favorites.first {
+                        $0.favoritable.id == restaurantId
+                    }
+
+                    favoriteId = favorite?.id ?? 0
+                    
+                    await vm.getRatingByUserId(reviewableId: restaurantId)
+                }
                 
                 updateMapPositionIfAvailable()
                 // Populate social links using switch-based resolver
@@ -1022,7 +1138,22 @@ struct RestaurantDetailView: View {
         .onAppear {
             print("isAuthenticated = \(auth.isAuthenticated)")
         }
-        
+        .onChange(of: vm.apiSuccessForSubmitRating) { _, newValue in
+            if newValue {
+                showRatingDialog = false
+                showSubmitRatingSuccess = true
+                
+                Task {
+                    await vm.getRatingByUserId(reviewableId: restaurantId)
+                    await vm.getRestaurantById(id: initialRestaurantId)
+                }
+            }
+        }
+        .onChange(of: vm.showError) { _, newValue in
+            if newValue {
+                showRatingDialog = false
+            }
+        }
     }
     
     private func updateMapPositionIfAvailable() {
@@ -1037,7 +1168,7 @@ struct RestaurantDetailView: View {
         let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
         let region = MKCoordinateRegion(
             center: coordinate,
-            span: MKCoordinateSpan(latitudeDelta: 0.02, longitudeDelta: 0.02)
+            span: MKCoordinateSpan(latitudeDelta: 0.001, longitudeDelta: 0.001)
         )
         position = .region(region)
     }
@@ -1045,6 +1176,7 @@ struct RestaurantDetailView: View {
 
 private struct RatingDialog: View {
     let title: String
+    let ratingFromApi: Int
     @Binding var selectedRating: Int
     var onCancel: () -> Void
     var onSubmit: () -> Void
@@ -1061,9 +1193,9 @@ private struct RatingDialog: View {
                     }
             }
             
-            Text(title)
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(LocalizedStringKey(title))
+                .font(.custom("Futura-Medium", size: 16.0))
+                .frame(maxWidth: .infinity, alignment: .center)
             
             // Interactive stars (1..5)
             HStack(spacing: 8) {
@@ -1083,19 +1215,24 @@ private struct RatingDialog: View {
             .padding(.vertical, 8)
             
             HStack(spacing: 12) {
-                
-                Button { onSubmit() } label: {
-                    Text("Submit")
-                        .font(.body.weight(.bold))
-                        .frame(maxWidth: 140)
-                        .padding(.vertical, 10)
+                if ratingFromApi != 0 {
+                    Text("rating.thanks")
+                        .font(.custom("Futura-Medium", size: 14.0))
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Color("PrimaryColor"))
+                else {
+                    Button { onSubmit() } label: {
+                        Text("Submit")
+                            .font(.custom("Futura-Medium", size: 14.0))
+                            .frame(maxWidth: 140)
+                            .padding(.vertical, 10)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color("PrimaryColor"))
+                }
             }
         }
         .padding(16)
-        .background(.ultraThinMaterial)
+        .background(.white)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(radius: 12)
         .frame(maxWidth: 360)
@@ -1103,7 +1240,7 @@ private struct RatingDialog: View {
 }
 
 #Preview {
-    RestaurantDetailView(restaurantId: 42, comeFrom: "home")
+    RestaurantDetailView(restaurantId: 2, comeFrom: "home")
         .environmentObject(AuthViewModel())
 }
 

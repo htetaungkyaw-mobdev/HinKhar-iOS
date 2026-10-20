@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A54FCD3A30662016004EFEB2 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = A54FCD3930662016004EFEB2 /* FirebaseAnalytics */; };
+		A54FCD3C30662016004EFEB2 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = A54FCD3B30662016004EFEB2 /* FirebaseCrashlytics */; };
+		A54FCD3E30662016004EFEB2 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = A54FCD3D30662016004EFEB2 /* FirebaseMessaging */; };
+		A54FCD4030662016004EFEB2 /* FirebaseRemoteConfig in Frameworks */ = {isa = PBXBuildFile; productRef = A54FCD3F30662016004EFEB2 /* FirebaseRemoteConfig */; };
 		A5D7755D2F84EE9600B767B1 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = A5D7755C2F84EE9600B767B1 /* Lottie */; };
 /* End PBXBuildFile section */
 
@@ -27,7 +31,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A54FCD3E30662016004EFEB2 /* FirebaseMessaging in Frameworks */,
+				A54FCD3C30662016004EFEB2 /* FirebaseCrashlytics in Frameworks */,
+				A54FCD3A30662016004EFEB2 /* FirebaseAnalytics in Frameworks */,
 				A5D7755D2F84EE9600B767B1 /* Lottie in Frameworks */,
+				A54FCD4030662016004EFEB2 /* FirebaseRemoteConfig in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -71,6 +79,10 @@
 			name = "HinKhar Restaurants Directory";
 			packageProductDependencies = (
 				A5D7755C2F84EE9600B767B1 /* Lottie */,
+				A54FCD3930662016004EFEB2 /* FirebaseAnalytics */,
+				A54FCD3B30662016004EFEB2 /* FirebaseCrashlytics */,
+				A54FCD3D30662016004EFEB2 /* FirebaseMessaging */,
+				A54FCD3F30662016004EFEB2 /* FirebaseRemoteConfig */,
 			);
 			productName = "HinKhar Restaurants Directory";
 			productReference = A559C4BF2ED8486100C033D0 /* HinKhar Restaurants Directory.app */;
@@ -103,6 +115,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				A5D7755B2F84EE9600B767B1 /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				A54FCD3830662016004EFEB2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A559C4C02ED8486100C033D0 /* Products */;
@@ -264,25 +277,28 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5JH53CTSFZ;
+				CURRENT_PROJECT_VERSION = 26;
+				DEVELOPMENT_TEAM = H6TAX9Q937;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "HinKhar-Restaurants-Directory-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = HinKhar;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take a profile picture.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "This app uses your location to improve location-based features.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app uses your location to show nearby restaurants.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.hinkhar.HinKhar-Restaurants-Directory";
+				MARKETING_VERSION = 1.0.12;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hinkhar.restaurants-directory";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -300,25 +316,28 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 5JH53CTSFZ;
+				CURRENT_PROJECT_VERSION = 26;
+				DEVELOPMENT_TEAM = H6TAX9Q937;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "HinKhar-Restaurants-Directory-Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = HinKhar;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs access to your camera to take a profile picture.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "This app uses your location to improve location-based features.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app uses your location to show nearby restaurants.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.hinkhar.HinKhar-Restaurants-Directory";
+				MARKETING_VERSION = 1.0.12;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.hinkhar.restaurants-directory";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -354,6 +373,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		A54FCD3830662016004EFEB2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.19.2;
+			};
+		};
 		A5D7755B2F84EE9600B767B1 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/airbnb/lottie-ios";
@@ -365,6 +392,26 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		A54FCD3930662016004EFEB2 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A54FCD3830662016004EFEB2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		A54FCD3B30662016004EFEB2 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A54FCD3830662016004EFEB2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		A54FCD3D30662016004EFEB2 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A54FCD3830662016004EFEB2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		A54FCD3F30662016004EFEB2 /* FirebaseRemoteConfig */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A54FCD3830662016004EFEB2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseRemoteConfig;
+		};
 		A5D7755C2F84EE9600B767B1 /* Lottie */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A5D7755B2F84EE9600B767B1 /* XCRemoteSwiftPackageReference "lottie-ios" */;

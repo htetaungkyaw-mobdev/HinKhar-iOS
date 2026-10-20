@@ -5,6 +5,7 @@
 //  Created by Htet Aung Kyaw on 07/12/2025.
 //
 import SwiftUI
+import UIKit
 
 struct ProfileView: View {
     init(isTabBarHidden: Binding<Bool>) {
@@ -31,13 +32,20 @@ struct ProfileView: View {
     @StateObject var vm = ProfileViewModel()
     @State private var isLoading: Bool = true
     
+    @State private var isShowingCamera = false
+    @State private var isShowingImageSourceDialog = false
+    @State private var selectedImageSource: UIImagePickerController.SourceType = .camera
+    @State private var inputImage: UIImage?
+    @State private var isUploading = false
+    @State private var uploadStatus = ""
+    
     var body: some View {
         NavigationStack {
             
             VStack(spacing: 0) {
                 // Search and Setting
                 
-                if !isLoading {
+                if !isLoading && vm.apiSuccess {
                     HStack(spacing: 8) {
                         Image("Search")
                             .symbolRenderingMode(.monochrome)
@@ -63,11 +71,9 @@ struct ProfileView: View {
                         VStack(spacing: 8) {
                             ZStack(alignment: .bottomTrailing) {
                                 Group {
-                                    if let imageName = profileImageName, !imageName.isEmpty {
-                                        Image(imageName)
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 120, height: 120)
+                                    if !vm.profileImageUrl.isEmpty {
+                                        RemoteFillImage(url: URL(string: vm.profileImageUrl), width: 160, height: 160)
+                                            .frame(width: 160, height: 160)
                                             .clipShape(Circle())
                                     } else {
                                         ZStack {
@@ -86,18 +92,18 @@ struct ProfileView: View {
                                         .stroke(Color("SecondaryColor"), lineWidth: 3)
                                 )
                                 .shadow(color: .black.opacity(0.15), radius: 10, x: 0, y: 6)
-
+                                
                                 // Camera overlay button
                                 Button(action: {
-                                    // handle camera tap (e.g., present image picker)
+                                    isShowingImageSourceDialog = true
                                 }) {
                                     ZStack {
                                         
                                         // Use asset named "Camera" if available, else SF Symbol
                                         Image("CameraProfile")
                                             .symbolRenderingMode(.monochrome)
-                                        .foregroundStyle(Color("SecondaryColor"))
-                                        .frame(width: 22, height: 22)
+                                            .foregroundStyle(Color("SecondaryColor"))
+                                            .frame(width: 22, height: 22)
                                     }
                                 }
                                 .offset(x: -26, y: -4)
@@ -348,7 +354,7 @@ struct ProfileView: View {
                     .navigationBarBackButtonHidden(true)
             }
             .navigationDestination(isPresented: $navigateToSetting) {
-                SettingView()
+                SettingView(isTabBarHidden: $isTabBarHidden)
                     .navigationBarBackButtonHidden(true)
             }
             .navigationDestination(isPresented: $navigateToUpdateProfile) {
@@ -365,8 +371,47 @@ struct ProfileView: View {
                 await vm.getUser()
                 await MainActor.run {
                     isLoading = false
+                    }
                 }
+            .confirmationDialog(
+                "Select Photo",
+                isPresented: $isShowingImageSourceDialog,
+                titleVisibility: .visible
+            ) {
+                Button("Take Picture") {
+                    selectedImageSource = .camera
+                    isShowingCamera = true
+                }
+
+                Button("Choose Picture") {
+                    selectedImageSource = .photoLibrary
+                    isShowingCamera = true
+                }
+
+                Button("Cancel", role: .cancel) {}
             }
+            .fullScreenCover(isPresented: $isShowingCamera) {
+                        CameraView(
+                            isPresented: $isShowingCamera,
+                            selectedImage: $inputImage,
+                            sourceType: selectedImageSource
+                        )
+                        .ignoresSafeArea()
+                    }
+            .onChange(of: inputImage) { oldImage, newImage in
+                    // Ensures we only trigger when a real image is assigned
+//                print("onChangeOfInputImage")
+//                print("newImage = \(newImage)")
+                    if let imageToUpload = newImage {
+                        Task { await vm.uploadImage(image: imageToUpload) }
+//                        print("imageToUpload = \(imageToUpload)")
+                    }
+                }
+//            .onChange(of: vm.updateSuccess) { newValue in
+//                if newValue {
+//                    Task {await vm.getUser()}
+//                }
+//            }
         }
         .environment(\.locale, Locale(identifier: selectedLanguageCode))
         .id(selectedLanguageCode)
@@ -452,4 +497,3 @@ struct ProfileView: View {
 #Preview {
     ProfileView(isTabBarHidden: .constant(false))
 }
-

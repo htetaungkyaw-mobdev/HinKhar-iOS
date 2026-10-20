@@ -18,7 +18,7 @@ struct CustomTabView: View {
     
     @AppStorage("selectedLanguageCode") private var selectedLanguageCode: String = "en"
     
-//    @State private var isLoggedIn = KeychainManager.shared.get("isLoggedIn") ?? "no"
+//    @State private var isLoggedIn = KeychainManager.shared.get(KeychainKeys.isLoggedIn) ?? "no"
     
     // Computed property
     
@@ -67,7 +67,7 @@ struct CustomTabView: View {
 //                            // Update previousTab so we know where to return to later
 //                            previousTab = newValue
 //                        }
-                    
+                    print("CustomTabView onChange selectedTab:", newValue)
                     if newValue == .profile && !auth.isAuthenticated {
                         showLogin = true
                     }
@@ -79,7 +79,7 @@ struct CustomTabView: View {
         .onAppear {
             print("CustomTabView onAppear selectedTab:", selectedTab)
             print("CustomTabView onAppear isAuthenticated:", auth.isAuthenticated)
-            let isLoggedIn = KeychainManager.shared.get("isLoggedIn") ?? "no"
+            let isLoggedIn = KeychainManager.shared.get(KeychainKeys.isLoggedIn) ?? "no"
             auth.isAuthenticated = (isLoggedIn == "yes")
             print("CustomTabView onAppear isLoggedIn:", isLoggedIn)
             print("CustomTabView onAppear isAuthenticated>>>2:", auth.isAuthenticated)

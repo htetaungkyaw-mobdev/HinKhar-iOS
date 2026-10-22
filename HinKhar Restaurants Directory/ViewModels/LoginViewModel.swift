@@ -4,6 +4,7 @@
 //
 //  Created by Htet Aung Kyaw on 01/12/2025.
 //
+
 import Foundation
 import Combine
 
@@ -34,7 +35,7 @@ class LoginViewModel: ObservableObject {
         showError = false
         loginSuccess = false
         errorMessage = ""
-        
+
         do {
             let response = try await LoginApiService.apiService.login(
                 endpoint: "auth/login",
@@ -48,15 +49,15 @@ class LoginViewModel: ObservableObject {
             KeychainManager.shared.save(response.user.name, forKey: KeychainKeys.userName)
             KeychainManager.shared.save(response.user.phone ?? "", forKey: KeychainKeys.userPhone)
             KeychainManager.shared.save(response.user.email ?? "", forKey: KeychainKeys.userEmail)
-            
             KeychainManager.shared.save("yes", forKey: KeychainKeys.isLoggedIn)
+
+            await DeviceTokenRegistrationService.shared.registerStoredToken(isSignedIn: true)
             loginSuccess = true
         } catch let apiError as LoginApiError {
             errorMessage = apiError.localizedDescription
             showError = true
             print("login_error1 = \(errorMessage)")
-        }
-        catch {
+        } catch {
             if NetworkRequestGuard.handleOfflineError(error) {
                 isLoading = false
                 return

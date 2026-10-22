@@ -13,6 +13,7 @@ struct HomeView: View {
     @State private var navigateToNearBy: Bool = false
     @State private var navigateToSearch: Bool = false
     @State private var navigateToSetting: Bool = false
+    @State private var navigateToNotifications: Bool = false
     @State private var navigateToDetail: Bool = false
     @State private var navigateToLogin: Bool = false
     
@@ -153,6 +154,20 @@ struct HomeView: View {
                                     navigateToSearch = true
                                     isTabBarHidden = true
                                 }
+                            Button {
+                                if KeychainManager.shared.get(KeychainKeys.userId) != "" {
+                                    navigateToNotifications = true
+                                } else {
+                                    navigateToLogin = true
+                                }
+                                isTabBarHidden = true
+                            } label: {
+                                Image(systemName: "bell")
+                                    .font(.body.weight(.medium))
+                                    .foregroundStyle(Color("PrimaryColor"))
+                                    .frame(width: 28, height: 28)
+                            }
+                            .accessibilityLabel("Notifications")
                             Image("Setting")
                                 .symbolRenderingMode(.monochrome)
                                 .foregroundStyle(Color("PrimaryColor"))
@@ -423,6 +438,10 @@ struct HomeView: View {
             }
             .navigationDestination(isPresented: $navigateToSetting) {
                 SettingView(isTabBarHidden: $isTabBarHidden)
+                    .navigationBarBackButtonHidden(true)
+            }
+            .navigationDestination(isPresented: $navigateToNotifications) {
+                NotificationsView()
                     .navigationBarBackButtonHidden(true)
             }
             .navigationDestination(isPresented: $navigateToDetail) {

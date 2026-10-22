@@ -4,6 +4,7 @@
 //
 //  Created by Htet Aung Kyaw on 01/12/2025.
 //
+
 import Foundation
 import Combine
 
@@ -17,11 +18,11 @@ class RegisterViewModel: ObservableObject {
     @Published var errorMessage = ""
     @Published var showError = false
     @Published var registerSuccess = false
-    
+
     @Published var apiSuccess = false
     @Published var successMessage = ""
     @Published var expiredTime = 0
-    
+
     var displayErrorMessage: String {
         switch errorMessage {
         case "Phone number already registered":
@@ -34,12 +35,12 @@ class RegisterViewModel: ObservableObject {
             return errorMessage
         }
     }
-    
+
     func sendOtp() async {
         isLoading = true
-        
+
         print("phoneOrEmail = \(phoneOrEmail)")
-        
+
         do {
             let response = try await ApiService.apiService.shared(
                 endpoint: "auth/send-otp",
@@ -49,10 +50,10 @@ class RegisterViewModel: ObservableObject {
             )
             successMessage = response.message ?? ""
             print("message = \(successMessage)")
-            
+
             expiredTime = response.expires_in
             print("expiredTime = \(expiredTime)")
-            
+
             apiSuccess = true
         } catch {
             if NetworkRequestGuard.handleOfflineError(error) {
@@ -67,10 +68,10 @@ class RegisterViewModel: ObservableObject {
 
         isLoading = false
     }
-    
+
     func resendOtp() async {
         isLoading = true
-        
+
         do {
             let response = try await ApiService.apiService.shared(
                 endpoint: "auth/resend-otp",
@@ -80,10 +81,10 @@ class RegisterViewModel: ObservableObject {
             )
             successMessage = response.message ?? ""
             print("message = \(successMessage)")
-            
+
             expiredTime = response.expires_in
             print("expiredTime = \(expiredTime)")
-            
+
             apiSuccess = true
         } catch {
             if NetworkRequestGuard.handleOfflineError(error) {
@@ -101,7 +102,7 @@ class RegisterViewModel: ObservableObject {
 
     func register(phoneOrEmail: String) async {
         isLoading = true
-        
+
         do {
             let response = try await RegisterApiService.apiService.register(
                 endpoint: "auth/register",
@@ -115,9 +116,9 @@ class RegisterViewModel: ObservableObject {
             KeychainManager.shared.save(response.user.name, forKey: KeychainKeys.userName)
             KeychainManager.shared.save(response.user.phone ?? "", forKey: KeychainKeys.userPhone)
             KeychainManager.shared.save(response.user.email ?? "", forKey: KeychainKeys.userEmail)
-            
             KeychainManager.shared.save("yes", forKey: KeychainKeys.isLoggedIn)
-            
+
+            await DeviceTokenRegistrationService.shared.registerStoredToken(isSignedIn: true)
             registerSuccess = true
         } catch {
             if NetworkRequestGuard.handleOfflineError(error) {

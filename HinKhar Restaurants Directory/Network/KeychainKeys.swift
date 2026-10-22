@@ -9,6 +9,7 @@ import Foundation
 
 enum KeychainKeys {
     static let userToken = "userToken"
+    static let fcmToken = "fcmToken"
     static let userId = "userId"
     static let userName = "userName"
     static let userPhone = "userPhone"

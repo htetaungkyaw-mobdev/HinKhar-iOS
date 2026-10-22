@@ -29,6 +29,6 @@ enum APIEnvironment {
 }
 
 struct APIConfig {
-    static var environment: APIEnvironment = .uat
+    static var environment: APIEnvironment = .dev
     static var baseURL: String { environment.baseURL }
 }

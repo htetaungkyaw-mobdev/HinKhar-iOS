@@ -26,6 +26,8 @@ class RegisterViewModel: ObservableObject {
         switch errorMessage {
         case "Phone number already registered":
             return "register.error.duplicatePhone"
+        case "Email already registered":
+            return "register.error.duplicateEmail"
         case "The password field must be at least 8 characters.":
             return "register.error.password.min8"
         case "The password field confirmation does not match.":
@@ -41,7 +43,7 @@ class RegisterViewModel: ObservableObject {
         print("phoneOrEmail = \(phoneOrEmail)")
         
         do {
-            let response = try await ApiService.apiService.shared(
+            let response = try await RegisterApiService.apiService.register(
                 endpoint: "auth/send-otp",
                 method: "POST",
                 body: ForgotPasswordRequest(identifier: phoneOrEmail),
@@ -72,7 +74,7 @@ class RegisterViewModel: ObservableObject {
         isLoading = true
         
         do {
-            let response = try await ApiService.apiService.shared(
+            let response = try await RegisterApiService.apiService.register(
                 endpoint: "auth/resend-otp",
                 method: "POST",
                 body: ForgotPasswordRequest(identifier: phoneOrEmail),

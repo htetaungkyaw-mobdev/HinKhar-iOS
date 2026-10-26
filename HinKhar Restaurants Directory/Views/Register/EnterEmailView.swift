@@ -179,6 +179,14 @@ struct EnterEmailView: View {
                 .padding(.top, 12)
                 .padding(.trailing, 16)
             }
+            .overlay(alignment: .bottom) {
+                
+                if register_vm.showError {
+                    ToastView(message: register_vm.displayErrorMessage)
+                        .padding(.bottom, 48)
+                        .onDisappear { register_vm.showError = false }
+                }
+            }
             .background(
                 ZStack {
                     Image("SplashBackground")

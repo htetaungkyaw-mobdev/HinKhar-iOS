@@ -48,6 +48,7 @@
 "register.agree.title" = "သဘောတူရန် အကွက်ကို နှိပ်ပါ!";
 "register.agree.message" = "ကိုယ်ရေးအချက်အလက်မူဝါဒနှင့် ဝန်ဆောင်မှုစည်းမျဉ်းများကို သဘောတူပါသည် ကို နှိပ်ပါ";
 "register.error.duplicatePhone" = "ဖုန်းနံပါတ်ကို အသုံးပြုပြီးဖြစ်ပါသည်";
+"register.error.duplicateEmail" = "အီးမေးလ်လိပ်စာကို အသုံးပြုပြီးဖြစ်ပါသည်";
 "register.error.password.min8" = "စကားဝှက် အနည်းဆုံး စာလုံး ၈ လုံး ရှိရမည်";
 "register.error.password.notMatch" = "စကားဝှက်အတည်ပြုချက် မကိုက်ညီပါ";
 

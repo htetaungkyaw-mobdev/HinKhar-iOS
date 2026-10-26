@@ -46,6 +46,7 @@
 "register.agree.title" = "Please click the checkbox to agree!";
 "register.agree.message" = "You must agree to the Privacy Policy and Terms of Service to continue.";
 "register.error.duplicatePhone" = "Phone number already registered";
+"register.error.duplicateEmail" = "Email already registered";
 "register.error.password.min8" = "The password field must be at least 8 characters.";
 "register.error.password.notMatch" = "The password field confirmation does not match.";
 
